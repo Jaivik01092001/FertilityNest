@@ -10,17 +10,17 @@ const MedicationDetail = () => {
   const [medication, setMedication] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [logNote, setLogNote] = useState('');
-  
+
   const { execute: fetchMedication, loading: loadingMedication, error: medicationError } = useApi({
     asyncAction: getMedication,
     feature: 'medications',
   });
-  
+
   const { execute: logMed, loading: loggingMedication, error: logError } = useApi({
     asyncAction: logMedication,
     feature: 'medications',
   });
-  
+
   const { execute: deleteMed, loading: deletingMedication, error: deleteError } = useApi({
     asyncAction: deleteMedication,
     feature: 'medications',
@@ -34,7 +34,7 @@ const MedicationDetail = () => {
 
   const loadMedication = async () => {
     const result = await fetchMedication(medicationId);
-    
+
     if (result.success && result.data.medication) {
       setMedication(result.data.medication);
     }
@@ -49,11 +49,11 @@ const MedicationDetail = () => {
         date: new Date().toISOString()
       }
     });
-    
+
     if (result.success) {
       toast.success(taken ? 'Medication logged as taken' : 'Medication logged as skipped');
       setLogNote('');
-      
+
       // Update medication state with new logs
       if (result.data.logs) {
         setMedication(prev => ({
@@ -68,7 +68,7 @@ const MedicationDetail = () => {
 
   const handleDeleteMedication = async () => {
     const result = await deleteMed(medicationId);
-    
+
     if (result.success) {
       toast.success('Medication deleted successfully');
       navigate('/medications');
@@ -91,7 +91,7 @@ const MedicationDetail = () => {
         <p className="text-red-500">{medicationError}</p>
         <button
           onClick={loadMedication}
-          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           Try Again
         </button>
@@ -105,7 +105,7 @@ const MedicationDetail = () => {
         <p className="text-gray-500">Medication not found</p>
         <Link
           to="/medications"
-          className="mt-4 inline-block px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          className="mt-4 inline-block px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           Back to Medications
         </Link>
@@ -114,12 +114,12 @@ const MedicationDetail = () => {
   }
 
   // Check if medication was taken today
-  const isTakenToday = medication.logs && medication.logs.some(log => 
+  const isTakenToday = medication.logs && medication.logs.some(log =>
     new Date(log.date).toDateString() === new Date().toDateString() && log.taken
   );
-  
+
   // Check if medication was skipped today
-  const isSkippedToday = medication.logs && medication.logs.some(log => 
+  const isSkippedToday = medication.logs && medication.logs.some(log =>
     new Date(log.date).toDateString() === new Date().toDateString() && !log.taken
   );
 
@@ -137,7 +137,7 @@ const MedicationDetail = () => {
         <div className="flex space-x-2">
           <Link
             to={`/medications/edit/${medicationId}`}
-            className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             Edit
           </Link>
@@ -149,13 +149,13 @@ const MedicationDetail = () => {
           </button>
         </div>
       </div>
-      
+
       {(logError || deleteError) && (
         <div className="px-4 py-3 bg-red-50 text-red-700 text-sm">
           {logError || deleteError}
         </div>
       )}
-      
+
       {confirmDelete && (
         <div className="px-4 py-5 sm:p-6 border-b border-gray-200 bg-red-50">
           <h3 className="text-lg leading-6 font-medium text-red-800">
@@ -170,7 +170,7 @@ const MedicationDetail = () => {
             <button
               type="button"
               onClick={() => setConfirmDelete(false)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Cancel
             </button>
@@ -185,7 +185,7 @@ const MedicationDetail = () => {
           </div>
         </div>
       )}
-      
+
       <div className="px-4 py-5 sm:p-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
         <div className="sm:col-span-3">
           <h4 className="text-md font-medium text-gray-900">Basic Information</h4>
@@ -225,7 +225,7 @@ const MedicationDetail = () => {
             </div>
           </dl>
         </div>
-        
+
         <div className="sm:col-span-3">
           <h4 className="text-md font-medium text-gray-900">Schedule</h4>
           <dl className="mt-2 text-sm text-gray-500">
@@ -246,7 +246,7 @@ const MedicationDetail = () => {
             <div className="mt-1 flex">
               <dt className="w-1/3 font-medium">Time of Day:</dt>
               <dd className="w-2/3">
-                {medication.timeOfDay.includes('custom') 
+                {medication.timeOfDay.includes('custom')
                   ? medication.customTimes.map(time => time).join(', ')
                   : medication.timeOfDay.join(', ')}
               </dd>
@@ -259,10 +259,10 @@ const MedicationDetail = () => {
             )}
           </dl>
         </div>
-        
+
         <div className="sm:col-span-6 border-t border-gray-200 pt-6">
           <h4 className="text-md font-medium text-gray-900">Log Medication for Today</h4>
-          
+
           {isTakenToday ? (
             <div className="mt-2 bg-green-50 p-4 rounded-md">
               <div className="flex">
@@ -316,12 +316,12 @@ const MedicationDetail = () => {
                     rows="2"
                     value={logNote}
                     onChange={(e) => setLogNote(e.target.value)}
-                    className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     placeholder="Add any notes about taking this medication"
                   />
                 </div>
               </div>
-              
+
               <div className="flex space-x-3">
                 <button
                   type="button"
@@ -343,10 +343,10 @@ const MedicationDetail = () => {
             </div>
           )}
         </div>
-        
+
         <div className="sm:col-span-6 border-t border-gray-200 pt-6">
           <h4 className="text-md font-medium text-gray-900">Medication History</h4>
-          
+
           {medication.logs && medication.logs.length > 0 ? (
             <div className="mt-2 overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
               <table className="min-w-full divide-y divide-gray-300">
@@ -391,11 +391,11 @@ const MedicationDetail = () => {
           )}
         </div>
       </div>
-      
+
       <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
         <Link
           to="/medications"
-          className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           Back to Medications
         </Link>

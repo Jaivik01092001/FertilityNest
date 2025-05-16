@@ -1,4 +1,31 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Coiny&display=swap");
 @import "tailwindcss";
+
+/* Base Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  color: #1f2937; /* neutral-800 */
+  background-color: #f9fafb; /* neutral-50 */
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+p {
+  margin: 0;
+}
 
 /* Typing animation */
 .typing-dot {
@@ -41,4 +68,80 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #a855f7;
+}
+
+/* Layout Utilities */
+.content-width {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.content-width-narrow {
+  width: 100%;
+  max-width: 768px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Form Styling */
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #7c3aed; /* primary-600 */
+  width: 18px;
+  height: 18px;
+}
+
+input,
+select,
+textarea {
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+/* Text Selection */
+::selection {
+  background-color: #ddd6fe; /* primary-200 */
+  color: #4c1d95; /* primary-900 */
+}
+
+/* Section Padding Utility */
+.section-padding {
+  padding: 3rem 0;
+}
+
+/* Card Styling */
+.card {
+  @apply bg-white rounded-xl shadow-soft p-6 transition-all duration-200;
+}
+
+.card:hover {
+  @apply shadow-card;
+}
+
+/* Button Styling */
+.btn {
+  @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+}
+
+.btn-primary {
+  @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+}
+
+.btn-secondary {
+  @apply bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-400;
+}
+
+.btn-accent {
+  @apply bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-400;
+}
+
+.btn-outline {
+  @apply border-2 border-primary-600 text-primary-600 bg-transparent hover:bg-primary-50 focus:ring-primary-500;
+}
+
+/* Input Styling */
+.input {
+  @apply block w-full rounded-lg border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
 }

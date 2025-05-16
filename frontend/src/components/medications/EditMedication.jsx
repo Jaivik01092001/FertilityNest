@@ -38,12 +38,12 @@ const EditMedication = () => {
       }
     }
   });
-  
+
   const { execute: fetchMedication, loading: loadingMedication, error: medicationError } = useApi({
     asyncAction: getMedication,
     feature: 'medications',
   });
-  
+
   const { execute: updateMed, loading: updatingMedication, error: updateError } = useApi({
     asyncAction: updateMedication,
     feature: 'medications',
@@ -57,15 +57,15 @@ const EditMedication = () => {
 
   const loadMedication = async () => {
     const result = await fetchMedication(medicationId);
-    
+
     if (result.success && result.data.medication) {
       const medication = result.data.medication;
-      
+
       // Format dates for form inputs
       const startDate = medication.startDate ? new Date(medication.startDate).toISOString().split('T')[0] : '';
       const endDate = medication.endDate ? new Date(medication.endDate).toISOString().split('T')[0] : '';
       const refillDate = medication.refillInfo?.refillDate ? new Date(medication.refillInfo.refillDate).toISOString().split('T')[0] : '';
-      
+
       setFormData({
         ...medication,
         startDate,
@@ -84,22 +84,22 @@ const EditMedication = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (name.includes('.')) {
       // Handle nested properties (e.g., reminders.enabled)
       const parts = name.split('.');
       setFormData((prev) => {
         const newData = { ...prev };
         let current = newData;
-        
+
         // Navigate to the nested property
         for (let i = 0; i < parts.length - 1; i++) {
           current = current[parts[i]];
         }
-        
+
         // Set the value
         current[parts[parts.length - 1]] = type === 'checkbox' ? checked : value;
-        
+
         return newData;
       });
     } else if (name === 'timeOfDay' || name === 'daysOfWeek') {
@@ -149,25 +149,25 @@ const EditMedication = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Prepare data for submission
     const medicationData = { ...formData };
-    
+
     // Remove empty fields
     if (!medicationData.endDate) delete medicationData.endDate;
     if (!medicationData.customFrequency) delete medicationData.customFrequency;
     if (!medicationData.refillInfo.refillDate) delete medicationData.refillInfo.refillDate;
-    
+
     // Handle custom times
     if (!medicationData.timeOfDay.includes('custom')) {
       delete medicationData.customTimes;
     }
-    
+
     const result = await updateMed({
       id: medicationId,
       medicationData
     });
-    
+
     if (result.success) {
       toast.success('Medication updated successfully');
       navigate(`/medications/${medicationId}`);
@@ -179,7 +179,7 @@ const EditMedication = () => {
   if (loadingMedication && !formData.name) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -190,7 +190,7 @@ const EditMedication = () => {
         <p className="text-red-500">{medicationError}</p>
         <button
           onClick={loadMedication}
-          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
         >
           Try Again
         </button>
@@ -208,13 +208,13 @@ const EditMedication = () => {
           Update details for {formData.name}
         </p>
       </div>
-      
+
       {(medicationError || updateError) && (
         <div className="px-4 py-3 bg-red-50 text-red-700 text-sm">
           {medicationError || updateError}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -231,11 +231,11 @@ const EditMedication = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="category" className="block text-sm font-medium text-gray-700">
                 Category
@@ -246,7 +246,7 @@ const EditMedication = () => {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 >
                   <option value="fertility">Fertility</option>
                   <option value="hormone">Hormone</option>
@@ -257,7 +257,7 @@ const EditMedication = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="sm:col-span-2">
               <label htmlFor="dosage" className="block text-sm font-medium text-gray-700">
                 Dosage *
@@ -270,11 +270,11 @@ const EditMedication = () => {
                   required
                   value={formData.dosage}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
             </div>
-            
+
             <div className="sm:col-span-2">
               <label htmlFor="unit" className="block text-sm font-medium text-gray-700">
                 Unit
@@ -286,12 +286,12 @@ const EditMedication = () => {
                   id="unit"
                   value={formData.unit}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   placeholder="mg, ml, etc."
                 />
               </div>
             </div>
-            
+
             <div className="sm:col-span-2">
               <label htmlFor="frequency" className="block text-sm font-medium text-gray-700">
                 Frequency *
@@ -303,7 +303,7 @@ const EditMedication = () => {
                   required
                   value={formData.frequency}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 >
                   <option value="once">Once</option>
                   <option value="daily">Daily</option>
@@ -315,7 +315,7 @@ const EditMedication = () => {
                 </select>
               </div>
             </div>
-            
+
             {formData.frequency === 'other' && (
               <div className="sm:col-span-6">
                 <label htmlFor="customFrequency" className="block text-sm font-medium text-gray-700">
@@ -328,13 +328,13 @@ const EditMedication = () => {
                     id="customFrequency"
                     value={formData.customFrequency || ''}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     placeholder="E.g., Every other day"
                   />
                 </div>
               </div>
             )}
-            
+
             <div className="sm:col-span-6">
               <div className="flex items-start">
                 <div className="flex items-center h-5">
@@ -344,7 +344,7 @@ const EditMedication = () => {
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
+                    className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
                   />
                 </div>
                 <div className="ml-3 text-sm">
@@ -355,7 +355,7 @@ const EditMedication = () => {
                 </div>
               </div>
             </div>
-            
+
             {/* Schedule */}
             <div className="sm:col-span-3">
               <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
@@ -369,11 +369,11 @@ const EditMedication = () => {
                   required
                   value={formData.startDate}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
                 End Date
@@ -385,14 +385,14 @@ const EditMedication = () => {
                   id="endDate"
                   value={formData.endDate || ''}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                 />
               </div>
               <p className="mt-1 text-xs text-gray-500">
                 Leave blank if ongoing
               </p>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="timeOfDay" className="block text-sm font-medium text-gray-700">
                 Time of Day *
@@ -405,7 +405,7 @@ const EditMedication = () => {
                   multiple
                   value={formData.timeOfDay}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   size="5"
                 >
                   <option value="morning">Morning</option>
@@ -419,7 +419,7 @@ const EditMedication = () => {
                 Hold Ctrl/Cmd to select multiple
               </p>
             </div>
-            
+
             {formData.timeOfDay.includes('custom') && (
               <div className="sm:col-span-3">
                 <label className="block text-sm font-medium text-gray-700">
@@ -432,7 +432,7 @@ const EditMedication = () => {
                         type="time"
                         value={time}
                         onChange={(e) => handleCustomTimeChange(index, e.target.value)}
-                        className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       />
                       {index > 0 && (
                         <button
@@ -450,7 +450,7 @@ const EditMedication = () => {
                   <button
                     type="button"
                     onClick={addCustomTime}
-                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="-ml-0.5 mr-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -460,7 +460,7 @@ const EditMedication = () => {
                 </div>
               </div>
             )}
-            
+
             {(formData.frequency === 'weekly' || formData.frequency === 'other') && (
               <div className="sm:col-span-6">
                 <label htmlFor="daysOfWeek" className="block text-sm font-medium text-gray-700">
@@ -473,7 +473,7 @@ const EditMedication = () => {
                     multiple
                     value={formData.daysOfWeek}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     size="7"
                   >
                     <option value="monday">Monday</option>
@@ -490,7 +490,7 @@ const EditMedication = () => {
                 </p>
               </div>
             )}
-            
+
             {/* Additional Information */}
             <div className="sm:col-span-6">
               <label htmlFor="purpose" className="block text-sm font-medium text-gray-700">
@@ -503,12 +503,12 @@ const EditMedication = () => {
                   id="purpose"
                   value={formData.purpose || ''}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   placeholder="E.g., For fertility support"
                 />
               </div>
             </div>
-            
+
             <div className="sm:col-span-6">
               <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">
                 Instructions
@@ -520,12 +520,12 @@ const EditMedication = () => {
                   rows="3"
                   value={formData.instructions || ''}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   placeholder="E.g., Take with food"
                 />
               </div>
             </div>
-            
+
             {/* Reminders */}
             <div className="sm:col-span-6">
               <div className="flex items-start">
@@ -536,7 +536,7 @@ const EditMedication = () => {
                     type="checkbox"
                     checked={formData.reminders?.enabled}
                     onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
+                    className="focus:ring-primary-500 h-4 w-4 text-primary-600 border-gray-300 rounded"
                   />
                 </div>
                 <div className="ml-3 text-sm">
@@ -547,7 +547,7 @@ const EditMedication = () => {
                 </div>
               </div>
             </div>
-            
+
             {formData.reminders?.enabled && (
               <>
                 <div className="sm:col-span-3">
@@ -563,11 +563,11 @@ const EditMedication = () => {
                       max="60"
                       value={formData.reminders?.reminderTime || 15}
                       onChange={handleChange}
-                      className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     />
                   </div>
                 </div>
-                
+
                 <div className="sm:col-span-3">
                   <label htmlFor="reminders.notificationMethod" className="block text-sm font-medium text-gray-700">
                     Notification Method
@@ -578,7 +578,7 @@ const EditMedication = () => {
                       name="reminders.notificationMethod"
                       value={formData.reminders?.notificationMethod || 'push'}
                       onChange={handleChange}
-                      className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                      className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     >
                       <option value="push">Push Notification</option>
                       <option value="email">Email</option>
@@ -591,19 +591,19 @@ const EditMedication = () => {
             )}
           </div>
         </div>
-        
+
         <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
           <button
             type="button"
             onClick={() => navigate(`/medications/${medicationId}`)}
-            className="mr-3 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            className="mr-3 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={updatingMedication}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-purple-300"
+            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:bg-primary-300"
           >
             {updatingMedication ? 'Saving...' : 'Save'}
           </button>

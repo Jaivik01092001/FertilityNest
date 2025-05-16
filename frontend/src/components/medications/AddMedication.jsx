@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { createMedication } from '../../store/slices/medicationSlice';
 import useApi from '../../hooks/useApi';
+import Layout from '../layout/Layout';
+import { Button, Input, Select, Card } from '../ui/UIComponents';
 
 const AddMedication = () => {
   const navigate = useNavigate();
@@ -36,7 +38,7 @@ const AddMedication = () => {
       }
     }
   });
-  
+
   const { execute, loading, error } = useApi({
     asyncAction: createMedication,
     feature: 'medications',
@@ -44,22 +46,22 @@ const AddMedication = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (name.includes('.')) {
       // Handle nested properties (e.g., reminders.enabled)
       const parts = name.split('.');
       setFormData((prev) => {
         const newData = { ...prev };
         let current = newData;
-        
+
         // Navigate to the nested property
         for (let i = 0; i < parts.length - 1; i++) {
           current = current[parts[i]];
         }
-        
+
         // Set the value
         current[parts[parts.length - 1]] = type === 'checkbox' ? checked : value;
-        
+
         return newData;
       });
     } else if (name === 'timeOfDay' || name === 'daysOfWeek') {
@@ -109,22 +111,22 @@ const AddMedication = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Prepare data for submission
     const medicationData = { ...formData };
-    
+
     // Remove empty fields
     if (!medicationData.endDate) delete medicationData.endDate;
     if (!medicationData.customFrequency) delete medicationData.customFrequency;
     if (!medicationData.refillInfo.refillDate) delete medicationData.refillInfo.refillDate;
-    
+
     // Handle custom times
     if (!medicationData.timeOfDay.includes('custom')) {
       delete medicationData.customTimes;
     }
-    
+
     const result = await execute(medicationData);
-    
+
     if (result.success) {
       toast.success('Medication added successfully');
       navigate('/medications');
@@ -134,179 +136,144 @@ const AddMedication = () => {
   };
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">
-          Add New Medication
-        </h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          Enter details about your medication or supplement
-        </p>
-      </div>
-      
-      {error && (
-        <div className="px-4 py-3 bg-red-50 text-red-700 text-sm">
-          {error}
+    <Layout>
+      <Card className="max-w-4xl mx-auto">
+        <div className="px-4 py-5 sm:px-6 border-b border-neutral-200">
+          <h3 className="text-xl leading-6 font-medium text-neutral-900">
+            Add New Medication
+          </h3>
+          <p className="mt-1 max-w-2xl text-sm text-neutral-500">
+            Enter details about your medication or supplement
+          </p>
         </div>
-      )}
-      
+
+        {error && (
+          <div className="px-4 py-3 mt-4 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
+            {error}
+          </div>
+        )}
+
       <form onSubmit={handleSubmit}>
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
             {/* Basic Information */}
             <div className="sm:col-span-3">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Medication Name *
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  required
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
+              <Input
+                type="text"
+                name="name"
+                id="name"
+                required
+                value={formData.name}
+                onChange={handleChange}
+                label="Medication Name *"
+                placeholder="Enter medication name"
+              />
             </div>
-            
+
             <div className="sm:col-span-3">
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                Category
-              </label>
-              <div className="mt-1">
-                <select
-                  id="category"
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                >
-                  <option value="fertility">Fertility</option>
-                  <option value="hormone">Hormone</option>
-                  <option value="vitamin">Vitamin</option>
-                  <option value="supplement">Supplement</option>
-                  <option value="pain relief">Pain Relief</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
+              <Select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                label="Category"
+                options={[
+                  { value: "fertility", label: "Fertility" },
+                  { value: "hormone", label: "Hormone" },
+                  { value: "vitamin", label: "Vitamin" },
+                  { value: "supplement", label: "Supplement" },
+                  { value: "pain relief", label: "Pain Relief" },
+                  { value: "other", label: "Other" }
+                ]}
+              />
             </div>
-            
+
             <div className="sm:col-span-2">
-              <label htmlFor="dosage" className="block text-sm font-medium text-gray-700">
-                Dosage *
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="dosage"
-                  id="dosage"
-                  required
-                  value={formData.dosage}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
+              <Input
+                type="text"
+                name="dosage"
+                id="dosage"
+                required
+                value={formData.dosage}
+                onChange={handleChange}
+                label="Dosage *"
+                placeholder="Enter dosage amount"
+              />
             </div>
-            
+
             <div className="sm:col-span-2">
-              <label htmlFor="unit" className="block text-sm font-medium text-gray-700">
-                Unit
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="unit"
-                  id="unit"
-                  value={formData.unit}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="mg, ml, etc."
-                />
-              </div>
+              <Input
+                type="text"
+                name="unit"
+                id="unit"
+                value={formData.unit}
+                onChange={handleChange}
+                label="Unit"
+                placeholder="mg, ml, etc."
+              />
             </div>
-            
+
             <div className="sm:col-span-2">
-              <label htmlFor="frequency" className="block text-sm font-medium text-gray-700">
-                Frequency *
-              </label>
-              <div className="mt-1">
-                <select
-                  id="frequency"
-                  name="frequency"
-                  required
-                  value={formData.frequency}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                >
-                  <option value="once">Once</option>
-                  <option value="daily">Daily</option>
-                  <option value="twice daily">Twice Daily</option>
-                  <option value="three times daily">Three Times Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="as needed">As Needed</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
+              <Select
+                id="frequency"
+                name="frequency"
+                required
+                value={formData.frequency}
+                onChange={handleChange}
+                label="Frequency *"
+                options={[
+                  { value: "once", label: "Once" },
+                  { value: "daily", label: "Daily" },
+                  { value: "twice daily", label: "Twice Daily" },
+                  { value: "three times daily", label: "Three Times Daily" },
+                  { value: "weekly", label: "Weekly" },
+                  { value: "as needed", label: "As Needed" },
+                  { value: "other", label: "Other" }
+                ]}
+              />
             </div>
-            
+
             {formData.frequency === 'other' && (
               <div className="sm:col-span-6">
-                <label htmlFor="customFrequency" className="block text-sm font-medium text-gray-700">
-                  Custom Frequency
-                </label>
-                <div className="mt-1">
-                  <input
-                    type="text"
-                    name="customFrequency"
-                    id="customFrequency"
-                    value={formData.customFrequency}
-                    onChange={handleChange}
-                    className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    placeholder="E.g., Every other day"
-                  />
-                </div>
+                <Input
+                  type="text"
+                  name="customFrequency"
+                  id="customFrequency"
+                  value={formData.customFrequency}
+                  onChange={handleChange}
+                  label="Custom Frequency"
+                  placeholder="E.g., Every other day"
+                />
               </div>
             )}
-            
+
             {/* Schedule */}
             <div className="sm:col-span-3">
-              <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">
-                Start Date *
-              </label>
-              <div className="mt-1">
-                <input
-                  type="date"
-                  name="startDate"
-                  id="startDate"
-                  required
-                  value={formData.startDate}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
+              <Input
+                type="date"
+                name="startDate"
+                id="startDate"
+                required
+                value={formData.startDate}
+                onChange={handleChange}
+                label="Start Date *"
+              />
             </div>
-            
+
             <div className="sm:col-span-3">
-              <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">
-                End Date
-              </label>
-              <div className="mt-1">
-                <input
-                  type="date"
-                  name="endDate"
-                  id="endDate"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
+              <Input
+                type="date"
+                name="endDate"
+                id="endDate"
+                value={formData.endDate}
+                onChange={handleChange}
+                label="End Date"
+              />
+              <p className="mt-1 text-xs text-neutral-500">
                 Leave blank if ongoing
               </p>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="timeOfDay" className="block text-sm font-medium text-gray-700">
                 Time of Day *
@@ -319,7 +286,7 @@ const AddMedication = () => {
                   multiple
                   value={formData.timeOfDay}
                   onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   size="5"
                 >
                   <option value="morning">Morning</option>
@@ -333,7 +300,7 @@ const AddMedication = () => {
                 Hold Ctrl/Cmd to select multiple
               </p>
             </div>
-            
+
             {formData.timeOfDay.includes('custom') && (
               <div className="sm:col-span-3">
                 <label className="block text-sm font-medium text-gray-700">
@@ -346,7 +313,7 @@ const AddMedication = () => {
                         type="time"
                         value={time}
                         onChange={(e) => handleCustomTimeChange(index, e.target.value)}
-                        className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                        className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                       />
                       {index > 0 && (
                         <button
@@ -364,7 +331,7 @@ const AddMedication = () => {
                   <button
                     type="button"
                     onClick={addCustomTime}
-                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-purple-700 bg-purple-100 hover:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                    className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-primary-700 bg-primary-100 hover:bg-primary-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="-ml-0.5 mr-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
@@ -374,7 +341,7 @@ const AddMedication = () => {
                 </div>
               </div>
             )}
-            
+
             {(formData.frequency === 'weekly' || formData.frequency === 'other') && (
               <div className="sm:col-span-6">
                 <label htmlFor="daysOfWeek" className="block text-sm font-medium text-gray-700">
@@ -387,7 +354,7 @@ const AddMedication = () => {
                     multiple
                     value={formData.daysOfWeek}
                     onChange={handleChange}
-                    className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                    className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     size="7"
                   >
                     <option value="monday">Monday</option>
@@ -404,42 +371,35 @@ const AddMedication = () => {
                 </p>
               </div>
             )}
-            
+
             {/* Additional Information */}
             <div className="sm:col-span-6">
-              <label htmlFor="purpose" className="block text-sm font-medium text-gray-700">
-                Purpose
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="purpose"
-                  id="purpose"
-                  value={formData.purpose}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="E.g., For fertility support"
-                />
-              </div>
+              <Input
+                type="text"
+                name="purpose"
+                id="purpose"
+                value={formData.purpose}
+                onChange={handleChange}
+                label="Purpose"
+                placeholder="E.g., For fertility support"
+              />
             </div>
-            
+
             <div className="sm:col-span-6">
-              <label htmlFor="instructions" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="instructions" className="block text-sm font-medium text-neutral-700 mb-1">
                 Instructions
               </label>
-              <div className="mt-1">
-                <textarea
-                  id="instructions"
-                  name="instructions"
-                  rows="3"
-                  value={formData.instructions}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="E.g., Take with food"
-                />
-              </div>
+              <textarea
+                id="instructions"
+                name="instructions"
+                rows="3"
+                value={formData.instructions}
+                onChange={handleChange}
+                className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full px-4 py-3 text-base border border-neutral-300 rounded-lg"
+                placeholder="E.g., Take with food"
+              />
             </div>
-            
+
             {/* Reminders */}
             <div className="sm:col-span-6">
               <div className="flex items-start">
@@ -450,80 +410,75 @@ const AddMedication = () => {
                     type="checkbox"
                     checked={formData.reminders.enabled}
                     onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
+                    className="focus:ring-primary-500 h-5 w-5 text-primary-600 border-neutral-300 rounded"
                   />
                 </div>
                 <div className="ml-3 text-sm">
-                  <label htmlFor="reminders.enabled" className="font-medium text-gray-700">
+                  <label htmlFor="reminders.enabled" className="font-medium text-neutral-700">
                     Enable Reminders
                   </label>
-                  <p className="text-gray-500">Receive reminders to take this medication</p>
+                  <p className="text-neutral-500">Receive reminders to take this medication</p>
                 </div>
               </div>
             </div>
-            
+
             {formData.reminders.enabled && (
               <>
                 <div className="sm:col-span-3">
-                  <label htmlFor="reminders.reminderTime" className="block text-sm font-medium text-gray-700">
-                    Reminder Time (minutes before)
-                  </label>
-                  <div className="mt-1">
-                    <input
-                      type="number"
-                      name="reminders.reminderTime"
-                      id="reminders.reminderTime"
-                      min="0"
-                      max="60"
-                      value={formData.reminders.reminderTime}
-                      onChange={handleChange}
-                      className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    />
-                  </div>
+                  <Input
+                    type="number"
+                    name="reminders.reminderTime"
+                    id="reminders.reminderTime"
+                    min="0"
+                    max="60"
+                    value={formData.reminders.reminderTime}
+                    onChange={handleChange}
+                    label="Reminder Time (minutes before)"
+                  />
                 </div>
-                
+
                 <div className="sm:col-span-3">
-                  <label htmlFor="reminders.notificationMethod" className="block text-sm font-medium text-gray-700">
-                    Notification Method
-                  </label>
-                  <div className="mt-1">
-                    <select
-                      id="reminders.notificationMethod"
-                      name="reminders.notificationMethod"
-                      value={formData.reminders.notificationMethod}
-                      onChange={handleChange}
-                      className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    >
-                      <option value="push">Push Notification</option>
-                      <option value="email">Email</option>
-                      <option value="sms">SMS</option>
-                      <option value="all">All Methods</option>
-                    </select>
-                  </div>
+                  <Select
+                    id="reminders.notificationMethod"
+                    name="reminders.notificationMethod"
+                    value={formData.reminders.notificationMethod}
+                    onChange={handleChange}
+                    label="Notification Method"
+                    options={[
+                      { value: "push", label: "Push Notification" },
+                      { value: "email", label: "Email" },
+                      { value: "sms", label: "SMS" },
+                      { value: "all", label: "All Methods" }
+                    ]}
+                  />
                 </div>
               </>
             )}
           </div>
         </div>
-        
-        <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-          <button
+
+        <div className="px-4 py-4 bg-neutral-50 text-right sm:px-6 rounded-b-lg border-t border-neutral-200">
+          <Button
             type="button"
             onClick={() => navigate('/medications')}
-            className="mr-3 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            variant="outline"
+            className="mr-3"
+            size="lg"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             type="submit"
             disabled={loading}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-purple-300"
+            variant="primary"
+            size="lg"
           >
             {loading ? 'Saving...' : 'Save'}
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
+      </Card>
+    </Layout>
   );
 };
 

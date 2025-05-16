@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import { getMedications } from '../../store/slices/medicationSlice';
 import useApi from '../../hooks/useApi';
 
 const MedicationList = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [activeFilter, setActiveFilter] = useState('true');
   const [categoryFilter, setCategoryFilter] = useState('');
-  
+
   const { medications, totalMedications } = useSelector((state) => state.medication);
   const { execute, loading, error } = useApi({
     asyncAction: getMedications,
@@ -20,9 +22,9 @@ const MedicationList = () => {
   }, [page, limit, activeFilter, categoryFilter]);
 
   const loadMedications = async () => {
-    await execute({ 
-      page, 
-      limit, 
+    await execute({
+      page,
+      limit,
       active: activeFilter === 'all' ? undefined : activeFilter,
       category: categoryFilter || undefined
     });
@@ -64,7 +66,7 @@ const MedicationList = () => {
           Track and manage your medications and supplements
         </p>
       </div>
-      
+
       {/* Filters */}
       <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 sm:px-6">
         <div className="flex flex-wrap items-center justify-between">
@@ -107,17 +109,16 @@ const MedicationList = () => {
             </div>
           </div>
           <div className="mt-4 sm:mt-0">
-            <button
-              type="button"
-              onClick={() => {/* Navigate to add medication page */}}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+            <Link
+              to="/medications/new"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Add Medication
-            </button>
+            </Link>
           </div>
         </div>
       </div>
-      
+
       {medications.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-500">No medications found.</p>
@@ -153,25 +154,25 @@ const MedicationList = () => {
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <button
-                    className="text-purple-600 hover:text-purple-800"
-                    onClick={() => {/* Navigate to medication details */}}
+                  <Link
+                    to={`/medications/${medication._id}`}
+                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
                     View
-                  </button>
-                  <button
-                    className="text-purple-600 hover:text-purple-800"
-                    onClick={() => {/* Navigate to edit medication */}}
+                  </Link>
+                  <Link
+                    to={`/medications/edit/${medication._id}`}
+                    className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
                     Edit
-                  </button>
+                  </Link>
                 </div>
               </div>
             </li>
           ))}
         </ul>
       )}
-      
+
       {/* Pagination */}
       {totalMedications > limit && (
         <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
@@ -179,10 +180,10 @@ const MedicationList = () => {
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+              className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
                 page === 1
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-gray-100 text-gray-400 border-gray-300'
+                  : 'bg-primary-600 text-white hover:bg-primary-700 border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
               }`}
             >
               Previous
@@ -190,10 +191,10 @@ const MedicationList = () => {
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page * limit >= totalMedications}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
+              className={`ml-3 relative inline-flex items-center px-4 py-2 border text-sm font-medium rounded-md ${
                 page * limit >= totalMedications
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
+                  ? 'bg-gray-100 text-gray-400 border-gray-300'
+                  : 'bg-primary-600 text-white hover:bg-primary-700 border-transparent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
               }`}
             >
               Next
