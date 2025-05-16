@@ -55,6 +55,7 @@ const ChatSession = () => {
   };
 
   const handleSendMessage = async (e) => {
+    setMessage('');
     e.preventDefault();
 
     if (!message.trim()) return;
@@ -62,11 +63,12 @@ const ChatSession = () => {
     // Set typing status to true immediately when user sends a message
     // This will be updated by the socket event when the AI response is ready
     dispatch(setTypingStatus({ sessionId, isTyping: true }));
-
+    fetchSession(sessionId);
     const result = await sendMsg({ sessionId, content: message });
 
     if (result.success) {
       setMessage('');
+      fetchSession(sessionId);
 
       // If there was no AI response (error case), make sure typing status is reset
       if (!result.data.aiResponse) {
