@@ -31,6 +31,9 @@ const io = socketIo(server, {
   }
 });
 
+// Make io instance available to the Express app
+app.set('io', io);
+
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -49,28 +52,28 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fertility
 // Socket.IO connection
 io.on('connection', (socket) => {
   console.log('New client connected');
-  
+
   // Join user to their personal room
   socket.on('join', (userId) => {
     socket.join(userId);
     console.log(`User ${userId} joined their room`);
   });
-  
+
   // Handle chat messages
   socket.on('sendMessage', (data) => {
     io.to(data.recipientId).emit('receiveMessage', data);
   });
-  
+
   // Handle notifications
   socket.on('sendNotification', (data) => {
     io.to(data.recipientId).emit('receiveNotification', data);
   });
-  
+
   // Handle distress signals
   socket.on('distressSignal', (data) => {
     io.to(data.partnerId).emit('distressAlert', data);
   });
-  
+
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
@@ -88,7 +91,7 @@ app.use('/api/community', communityRoutes);
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../frontend/dist')));
-  
+
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(__dirname, '../frontend/dist', 'index.html'));
   });

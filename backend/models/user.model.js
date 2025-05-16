@@ -111,6 +111,10 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin', 'moderator'],
     default: 'user'
   },
+  geminiApiKey: {
+    type: String,
+    trim: true
+  },
   joinedCommunities: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Community'
@@ -130,10 +134,10 @@ const userSchema = new mongoose.Schema({
 // Pre-save hook to hash password
 userSchema.pre('save', async function(next) {
   const user = this;
-  
+
   // Only hash the password if it's modified or new
   if (!user.isModified('password')) return next();
-  
+
   try {
     // Generate salt
     const salt = await bcrypt.genSalt(10);

@@ -17,24 +17,24 @@ exports.updateProfile = async (req, res) => {
       phone,
       preferences
     } = req.body;
-    
+
     // Find user
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     // Update fields
     if (name) user.name = name;
     if (fertilityStage) user.fertilityStage = fertilityStage;
     if (journeyType) user.journeyType = journeyType;
     if (dateOfBirth) user.dateOfBirth = dateOfBirth;
     if (phone) user.phone = phone;
-    
+
     // Update preferences if provided
     if (preferences) {
       if (preferences.notifications) {
@@ -43,27 +43,27 @@ exports.updateProfile = async (req, res) => {
           ...preferences.notifications
         };
       }
-      
+
       if (preferences.privacy) {
         user.preferences.privacy = {
           ...user.preferences.privacy,
           ...preferences.privacy
         };
       }
-      
+
       if (preferences.theme) {
         user.preferences.theme = preferences.theme;
       }
     }
-    
+
     // Save updated user
     await user.save();
-    
+
     // Remove sensitive data
     user.password = undefined;
     user.verificationToken = undefined;
     user.resetPasswordToken = undefined;
-    
+
     res.status(200).json({
       success: true,
       message: 'Profile updated successfully',
@@ -87,17 +87,17 @@ exports.updateProfile = async (req, res) => {
 exports.changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
-    
+
     // Find user
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     // Check if current password is correct
     const isMatch = await user.comparePassword(currentPassword);
     if (!isMatch) {
@@ -106,11 +106,11 @@ exports.changePassword = async (req, res) => {
         message: 'Current password is incorrect'
       });
     }
-    
+
     // Update password
     user.password = newPassword;
     await user.save();
-    
+
     // Send confirmation email
     await sendEmail({
       to: user.email,
@@ -121,7 +121,7 @@ exports.changePassword = async (req, res) => {
         <p>If you did not make this change, please contact support immediately.</p>
       `
     });
-    
+
     res.status(200).json({
       success: true,
       message: 'Password changed successfully'
@@ -144,27 +144,27 @@ exports.changePassword = async (req, res) => {
 exports.addEmergencyContact = async (req, res) => {
   try {
     const { name, phone, relationship } = req.body;
-    
+
     // Find user
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     // Add emergency contact
     user.emergencyContacts.push({
       name,
       phone,
       relationship
     });
-    
+
     // Save user
     await user.save();
-    
+
     res.status(201).json({
       success: true,
       message: 'Emergency contact added successfully',
@@ -188,25 +188,25 @@ exports.addEmergencyContact = async (req, res) => {
 exports.removeEmergencyContact = async (req, res) => {
   try {
     const { contactId } = req.params;
-    
+
     // Find user
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     // Remove emergency contact
     user.emergencyContacts = user.emergencyContacts.filter(
       contact => contact._id.toString() !== contactId
     );
-    
+
     // Save user
     await user.save();
-    
+
     res.status(200).json({
       success: true,
       message: 'Emergency contact removed successfully',
@@ -231,20 +231,20 @@ exports.generatePartnerCode = async (req, res) => {
   try {
     // Find user
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     // Generate partner code
     const partnerCode = user.generatePartnerCode();
-    
+
     // Save user
     await user.save();
-    
+
     res.status(200).json({
       success: true,
       message: 'Partner code generated successfully',
@@ -265,30 +265,74 @@ exports.generatePartnerCode = async (req, res) => {
  * @route POST /api/users/link-partner
  * @access Private
  */
-exports.linkPartner = async (req, res) => {
+/**
+ * Update Gemini API key
+ * @route PUT /api/users/gemini-api-key
+ * @access Private
+ */
+exports.updateGeminiApiKey = async (req, res) => {
   try {
-    const { partnerCode } = req.body;
-    
-    // Find user with partner code
-    const partner = await User.findOne({ partnerCode });
-    
-    if (!partner) {
-      return res.status(404).json({
-        success: false,
-        message: 'Invalid partner code'
-      });
-    }
-    
-    // Find current user
+    const { geminiApiKey } = req.body;
+
+    // Find user
     const user = await User.findById(req.user._id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
+    // Update Gemini API key
+    user.geminiApiKey = geminiApiKey;
+
+    // Save user
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Gemini API key updated successfully'
+    });
+  } catch (error) {
+    console.error('Update Gemini API key error:', error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating Gemini API key',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+/**
+ * Link partner
+ * @route POST /api/users/link-partner
+ * @access Private
+ */
+exports.linkPartner = async (req, res) => {
+  try {
+    const { partnerCode } = req.body;
+
+    // Find user with partner code
+    const partner = await User.findOne({ partnerCode });
+
+    if (!partner) {
+      return res.status(404).json({
+        success: false,
+        message: 'Invalid partner code'
+      });
+    }
+
+    // Find current user
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
     // Check if already linked to a partner
     if (user.partnerId) {
       return res.status(400).json({
@@ -296,15 +340,15 @@ exports.linkPartner = async (req, res) => {
         message: 'You are already linked to a partner'
       });
     }
-    
+
     // Link partners
     user.partnerId = partner._id;
     partner.partnerId = user._id;
     partner.partnerCode = undefined;
-    
+
     // Save both users
     await Promise.all([user.save(), partner.save()]);
-    
+
     // Create notifications for both users
     await Notification.createNotification({
       recipient: partner._id,
@@ -315,7 +359,7 @@ exports.linkPartner = async (req, res) => {
       priority: 'high',
       actionLink: '/profile/partner'
     });
-    
+
     await Notification.createNotification({
       recipient: user._id,
       sender: partner._id,
@@ -325,7 +369,7 @@ exports.linkPartner = async (req, res) => {
       priority: 'high',
       actionLink: '/profile/partner'
     });
-    
+
     res.status(200).json({
       success: true,
       message: 'Partner linked successfully',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { updateProfile } from '../../store/slices/authSlice';
 import useApi from '../../hooks/useApi';
+import Layout from '../layout/Layout';
 
 const Profile = () => {
   const { user } = useSelector((state) => state.auth);
@@ -25,7 +26,7 @@ const Profile = () => {
     },
   });
   const [updateSuccess, setUpdateSuccess] = useState(false);
-  
+
   const { execute, loading, error } = useApi({
     asyncAction: updateProfile,
     feature: 'auth',
@@ -57,22 +58,22 @@ const Profile = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    
+
     if (name.includes('.')) {
       // Handle nested properties (e.g., preferences.notifications.email)
       const parts = name.split('.');
       setFormData((prev) => {
         const newData = { ...prev };
         let current = newData;
-        
+
         // Navigate to the nested property
         for (let i = 0; i < parts.length - 1; i++) {
           current = current[parts[i]];
         }
-        
+
         // Set the value
         current[parts[parts.length - 1]] = type === 'checkbox' ? checked : value;
-        
+
         return newData;
       });
     } else {
@@ -82,7 +83,7 @@ const Profile = () => {
         [name]: value,
       }));
     }
-    
+
     // Clear success message when form is changed
     if (updateSuccess) {
       setUpdateSuccess(false);
@@ -91,12 +92,12 @@ const Profile = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const result = await execute(formData);
-    
+
     if (result.success) {
       setUpdateSuccess(true);
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setUpdateSuccess(false);
@@ -106,23 +107,27 @@ const Profile = () => {
 
   if (!user) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Loading profile...</p>
-      </div>
+      <Layout>
+        <div className="text-center py-8">
+          <p className="text-gray-500">Loading profile...</p>
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-        <h3 className="text-lg leading-6 font-medium text-gray-900">
-          Profile Information
-        </h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          Update your personal details and preferences
-        </p>
-      </div>
-      
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h3 className="text-lg leading-6 font-medium text-gray-900">
+              Profile Information
+            </h3>
+            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+              Update your personal details and preferences
+            </p>
+          </div>
+
       {error && (
         <div className="rounded-md bg-red-50 p-4 m-4">
           <div className="flex">
@@ -137,7 +142,7 @@ const Profile = () => {
           </div>
         </div>
       )}
-      
+
       {updateSuccess && (
         <div className="rounded-md bg-green-50 p-4 m-4">
           <div className="flex">
@@ -152,7 +157,7 @@ const Profile = () => {
           </div>
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit}>
         <div className="px-4 py-5 sm:p-6">
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -171,7 +176,7 @@ const Profile = () => {
                 />
               </div>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email Address
@@ -190,7 +195,7 @@ const Profile = () => {
                 Email cannot be changed
               </p>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="fertilityStage" className="block text-sm font-medium text-gray-700">
                 Fertility Stage
@@ -213,7 +218,7 @@ const Profile = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="journeyType" className="block text-sm font-medium text-gray-700">
                 Journey Type
@@ -234,7 +239,7 @@ const Profile = () => {
                 </select>
               </div>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
                 Date of Birth
@@ -250,7 +255,7 @@ const Profile = () => {
                 />
               </div>
             </div>
-            
+
             <div className="sm:col-span-3">
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
                 Phone Number
@@ -267,7 +272,7 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-8">
             <h3 className="text-lg font-medium text-gray-900">Notification Preferences</h3>
             <div className="mt-4 space-y-4">
@@ -289,7 +294,7 @@ const Profile = () => {
                   <p className="text-gray-500">Receive updates and reminders via email</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input
@@ -308,7 +313,7 @@ const Profile = () => {
                   <p className="text-gray-500">Receive push notifications in your browser</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input
@@ -329,7 +334,7 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-8">
             <h3 className="text-lg font-medium text-gray-900">Privacy Preferences</h3>
             <div className="mt-4 space-y-4">
@@ -351,7 +356,7 @@ const Profile = () => {
                   <p className="text-gray-500">Allow your partner to view your cycle and medication data</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input
@@ -372,7 +377,7 @@ const Profile = () => {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-8">
             <h3 className="text-lg font-medium text-gray-900">Theme Preference</h3>
             <div className="mt-4">
@@ -390,7 +395,7 @@ const Profile = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
           <button
             type="submit"
@@ -401,7 +406,9 @@ const Profile = () => {
           </button>
         </div>
       </form>
-    </div>
+        </div>
+      </div>
+    </Layout>
   );
 };
 

@@ -231,7 +231,17 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    // Get AI response using OpenAI API
+    // Get the socket.io instance
+    const io = req.app.get('io');
+
+    // Emit typing started event
+    if (io) {
+      io.to(req.user._id.toString()).emit('typingStarted', {
+        sessionId: chatSession._id.toString()
+      });
+    }
+
+    // Get AI response using Gemini API
     try {
       const aiResponse = await getAIResponse(content, chatSession);
 
@@ -240,6 +250,13 @@ exports.sendMessage = async (req, res) => {
 
       // Save chat session
       await chatSession.save();
+
+      // Emit typing stopped event
+      if (io) {
+        io.to(req.user._id.toString()).emit('typingStopped', {
+          sessionId: chatSession._id.toString()
+        });
+      }
 
       res.status(201).json({
         success: true,
@@ -252,6 +269,13 @@ exports.sendMessage = async (req, res) => {
 
       // Save user message even if AI fails
       await chatSession.save();
+
+      // Emit typing stopped event even on error
+      if (io) {
+        io.to(req.user._id.toString()).emit('typingStopped', {
+          sessionId: chatSession._id.toString()
+        });
+      }
 
       res.status(201).json({
         success: true,
@@ -306,7 +330,7 @@ exports.deleteChatSession = async (req, res) => {
 };
 
 /**
- * Helper function to get AI response using OpenAI API
+ * Helper function to get AI response using Gemini API
  * @param {String} userMessage - User message
  * @param {Object} chatSession - Chat session object
  * @returns {Object} AI response object
@@ -317,44 +341,61 @@ const getAIResponse = async (userMessage, chatSession) => {
     const contextMessage = `You are Anaira, an empathetic AI companion for FertilityNest, a fertility support app.
     The user is on a ${chatSession.context.userJourneyType || 'fertility'} journey and is currently in the ${chatSession.context.fertilityStage || 'unknown'} stage.
     ${chatSession.context.cycleDay ? `They are on day ${chatSession.context.cycleDay} of their cycle.` : ''}
-    ${chatSession.context.recentSymptoms.length > 0 ? `They recently experienced these symptoms: ${chatSession.context.recentSymptoms.join(', ')}.` : ''}
-    ${chatSession.context.recentMedications.length > 0 ? `They are taking these medications: ${chatSession.context.recentMedications.join(', ')}.` : ''}
+    ${chatSession.context.recentSymptoms?.length > 0 ? `They recently experienced these symptoms: ${chatSession.context.recentSymptoms.join(', ')}.` : ''}
+    ${chatSession.context.recentMedications?.length > 0 ? `They are taking these medications: ${chatSession.context.recentMedications.join(', ')}.` : ''}
 
     Be compassionate, informative, and supportive. Provide evidence-based information when possible, but clarify you're not a medical professional.
     If the user seems distressed, offer support and suggest they speak with a healthcare provider.`;
 
-    // Get previous messages (limit to last 10 for context)
-    const previousMessages = chatSession.messages.slice(-10).map(msg => ({
-      role: msg.sender === 'user' ? 'user' : 'assistant',
-      content: msg.content
-    }));
+    // Get previous messages (limit to last 5 for context)
+    const previousMessages = chatSession.messages.slice(-5);
 
-    // Prepare messages for OpenAI API
-    const messages = [
-      { role: 'system', content: contextMessage },
-      ...previousMessages,
-      { role: 'user', content: userMessage }
-    ];
+    // Use the system API key
+    // In a production environment, you might want to check if the user has their own API key
+    const apiKey = process.env.GEMINI_API_KEY;
 
-    // Call OpenAI API
+    if (!apiKey) {
+      throw new Error('No Gemini API key available');
+    }
+
+    // Combine context and user message
+    let combinedMessage = contextMessage + "\n\n";
+
+    // Add chat history
+    if (previousMessages.length > 0) {
+      combinedMessage += "Previous conversation:\n";
+      for (const msg of previousMessages) {
+        const role = msg.sender === 'user' ? 'User' : 'Anaira';
+        combinedMessage += `${role}: ${msg.content}\n`;
+      }
+    }
+
+    // Add current user message
+    combinedMessage += `\nUser's current message: ${userMessage}\n\nAnaira's response:`;
+
+    // Call Gemini API using the direct REST endpoint
     const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
-        model: 'gpt-3.5-turbo',
-        messages,
-        temperature: 0.7,
-        max_tokens: 500
+        contents: [{
+          parts: [{ text: combinedMessage }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 500,
+          topP: 0.95,
+          topK: 40
+        }
       },
       {
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
           'Content-Type': 'application/json'
         }
       }
     );
 
     // Extract AI response
-    const aiContent = response.data.choices[0].message.content;
+    const aiContent = response.data.candidates[0].content.parts[0].text.trim();
 
     // Simple emotion detection (can be replaced with more sophisticated ML model)
     const emotionDetected = detectEmotion(userMessage);
@@ -366,7 +407,8 @@ const getAIResponse = async (userMessage, chatSession) => {
       emotionDetected
     };
   } catch (error) {
-    console.error('OpenAI API error:', error.message);
+    console.error('Gemini API error:', error.message);
+    console.error('Error details:', error.response?.data || 'No response data');
 
     // Fallback response if API fails
     return {

@@ -4,17 +4,18 @@ import { useSelector, useDispatch } from 'react-redux';
 import { getCurrentCycle } from '../../store/slices/cycleSlice';
 import { getTodayMedications } from '../../store/slices/medicationSlice';
 import useApi from '../../hooks/useApi';
+import Layout from '../layout/Layout';
 
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const { currentCycle } = useSelector((state) => state.cycle);
   const { todayMedications } = useSelector((state) => state.medication);
-  
+
   const cycleApi = useApi({
     asyncAction: getCurrentCycle,
     feature: 'cycles',
   });
-  
+
   const medicationApi = useApi({
     asyncAction: getTodayMedications,
     feature: 'medications',
@@ -27,22 +28,23 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="py-6">
-        <h1 className="text-2xl font-semibold text-gray-900">
-          Welcome, {user?.name || 'User'}
-        </h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Here's an overview of your fertility journey
-        </p>
-      </div>
-      
+    <Layout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-6">
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Welcome, {user?.name || 'User'}
+          </h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Here's an overview of your fertility journey
+          </p>
+        </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Cycle Information */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900">Cycle Information</h2>
-            
+
             {cycleApi.loading ? (
               <div className="mt-4 flex justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -67,7 +69,7 @@ const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                
+
                 {currentCycle.fertileWindow && (
                   <div className="mt-4">
                     <p className="text-sm font-medium text-gray-500">Fertile Window</p>
@@ -76,7 +78,7 @@ const Dashboard = () => {
                     </p>
                   </div>
                 )}
-                
+
                 <div className="mt-6">
                   <Link
                     to="/cycles"
@@ -101,12 +103,12 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-        
+
         {/* Today's Medications */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900">Today's Medications</h2>
-            
+
             {medicationApi.loading ? (
               <div className="mt-4 flex justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -128,7 +130,7 @@ const Dashboard = () => {
                           </p>
                         </div>
                         <div>
-                          {medication.logs && medication.logs.some(log => 
+                          {medication.logs && medication.logs.some(log =>
                             new Date(log.date).toDateString() === new Date().toDateString() && log.taken
                           ) ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -148,7 +150,7 @@ const Dashboard = () => {
                     </li>
                   ))}
                 </ul>
-                
+
                 <div className="mt-6">
                   <Link
                     to="/medications"
@@ -173,7 +175,7 @@ const Dashboard = () => {
             )}
           </div>
         </div>
-        
+
         {/* Quick Actions */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
@@ -206,12 +208,12 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Partner Information */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <h2 className="text-lg font-medium text-gray-900">Partner Connection</h2>
-            
+
             {user?.partnerId ? (
               <div className="mt-4">
                 <p className="text-sm text-gray-500">You are connected with a partner.</p>
@@ -241,6 +243,7 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    </Layout>
   );
 };
 

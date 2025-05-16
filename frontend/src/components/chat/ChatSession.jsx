@@ -1,22 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { getChatSession, sendMessage } from '../../store/slices/chatSlice';
+import { getChatSession, sendMessage, setTypingStatus } from '../../store/slices/chatSlice';
 import useApi from '../../hooks/useApi';
+import { getSocket, initSocket } from '../../services/socketService';
 
 const ChatSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
-  
+
   const { currentSession } = useSelector((state) => state.chat);
+  const { user } = useSelector((state) => state.auth);
   const { execute: fetchSession, loading: loadingSession, error: sessionError } = useApi({
     asyncAction: getChatSession,
     feature: 'chat',
   });
-  
+
   const { execute: sendMsg, loading: sendingMessage, error: sendError } = useApi({
     asyncAction: sendMessage,
     feature: 'chat',
@@ -28,6 +31,21 @@ const ChatSession = () => {
     }
   }, [sessionId]);
 
+  // Initialize socket connection
+  useEffect(() => {
+    if (user && user._id) {
+      // Initialize socket connection
+      const socket = initSocket(user._id);
+
+      // Clean up on unmount
+      return () => {
+        if (socket) {
+          socket.disconnect();
+        }
+      };
+    }
+  }, [user]);
+
   useEffect(() => {
     scrollToBottom();
   }, [currentSession?.messages]);
@@ -38,15 +56,25 @@ const ChatSession = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    
+
     if (!message.trim()) return;
-    
+
+    // Set typing status to true immediately when user sends a message
+    // This will be updated by the socket event when the AI response is ready
+    dispatch(setTypingStatus({ sessionId, isTyping: true }));
+
     const result = await sendMsg({ sessionId, content: message });
-    
+
     if (result.success) {
       setMessage('');
+
+      // If there was no AI response (error case), make sure typing status is reset
+      if (!result.data.aiResponse) {
+        dispatch(setTypingStatus({ sessionId, isTyping: false }));
+      }
     } else {
       toast.error('Failed to send message');
+      dispatch(setTypingStatus({ sessionId, isTyping: false }));
     }
   };
 
@@ -104,41 +132,56 @@ const ChatSession = () => {
           Back to Chat List
         </Link>
       </div>
-      
+
       {sendError && (
         <div className="px-4 py-3 bg-red-50 text-red-700 text-sm">
           {sendError}
         </div>
       )}
-      
+
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {currentSession.messages && currentSession.messages.length > 0 ? (
-          currentSession.messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+          <>
+            {currentSession.messages.map((msg, index) => (
               <div
-                className={`max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl px-4 py-2 rounded-lg ${
-                  msg.sender === 'user'
-                    ? 'bg-purple-100 text-purple-900'
-                    : 'bg-gray-100 text-gray-900'
-                }`}
+                key={index}
+                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="text-sm">
-                  {msg.content.split('\n').map((line, i) => (
-                    <React.Fragment key={i}>
-                      {line}
-                      {i < msg.content.split('\n').length - 1 && <br />}
-                    </React.Fragment>
-                  ))}
-                </div>
-                <div className="mt-1 text-xs text-gray-500 text-right">
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+                <div
+                  className={`max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl px-4 py-2 rounded-lg ${
+                    msg.sender === 'user'
+                      ? 'bg-purple-100 text-purple-900'
+                      : 'bg-gray-100 text-gray-900'
+                  }`}
+                >
+                  <div className="text-sm">
+                    {msg.content.split('\n').map((line, i) => (
+                      <React.Fragment key={i}>
+                        {line}
+                        {i < msg.content.split('\n').length - 1 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500 text-right">
+                    {new Date(msg.timestamp).toLocaleTimeString()}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+
+            {/* Typing indicator */}
+            {currentSession.isTyping && (
+              <div className="flex justify-start">
+                <div className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl px-4 py-2 rounded-lg bg-gray-100">
+                  <div className="flex space-x-1">
+                    <div className="typing-dot bg-gray-500"></div>
+                    <div className="typing-dot bg-gray-500 animation-delay-200"></div>
+                    <div className="typing-dot bg-gray-500 animation-delay-400"></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-8">
             <p className="text-gray-500">No messages yet. Start the conversation!</p>
@@ -146,7 +189,7 @@ const ChatSession = () => {
         )}
         <div ref={messagesEndRef} />
       </div>
-      
+
       <div className="px-4 py-4 sm:px-6 border-t border-gray-200">
         <form onSubmit={handleSendMessage} className="flex space-x-3">
           <div className="flex-1">

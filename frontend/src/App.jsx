@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { getCurrentUser } from './store/slices/authSlice'
+import { initSocket, disconnectSocket } from './services/socketService'
 
 // Import auth components
 import Login from './components/auth/Login'
@@ -16,6 +17,9 @@ import VerifyEmail from './components/auth/VerifyEmail'
 import Profile from './components/user/Profile'
 import ChangePassword from './components/user/ChangePassword'
 import EmergencyContacts from './components/user/EmergencyContacts'
+
+// Import settings component
+import Settings from './components/settings/Settings'
 
 // Import dashboard component
 import Dashboard from './components/dashboard/Dashboard'
@@ -56,13 +60,27 @@ const ProtectedRoute = ({ children }) => {
 
 const App = () => {
   const dispatch = useDispatch()
-  const { token } = useSelector((state) => state.auth)
+  const { token, user, isAuthenticated } = useSelector((state) => state.auth)
 
+  // Initialize user data when token is available
   useEffect(() => {
     if (token) {
       dispatch(getCurrentUser())
     }
   }, [dispatch, token])
+
+  // Initialize socket connection when user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && user && user._id) {
+      // Initialize socket connection with user ID
+      initSocket(user._id)
+    }
+
+    // Clean up socket connection on unmount
+    return () => {
+      disconnectSocket()
+    }
+  }, [isAuthenticated, user])
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,6 +122,11 @@ const App = () => {
         <Route path="/emergency-contacts" element={
           <ProtectedRoute>
             <EmergencyContacts />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute>
+            <Settings />
           </ProtectedRoute>
         } />
         <Route path="/cycles" element={

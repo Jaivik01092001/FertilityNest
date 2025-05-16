@@ -45,4 +45,11 @@ router.post('/partner-code', authenticate, isVerified, userController.generatePa
  */
 router.post('/link-partner', authenticate, isVerified, userController.linkPartner);
 
+/**
+ * @route PUT /api/users/gemini-api-key
+ * @desc Update Gemini API key
+ * @access Private
+ */
+router.put('/gemini-api-key', authenticate, userController.updateGeminiApiKey);
+
 module.exports = router;

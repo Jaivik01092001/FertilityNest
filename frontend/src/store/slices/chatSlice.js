@@ -9,6 +9,7 @@ const initialState = {
   totalSessions: 0,
   page: 1,
   limit: 10,
+  typingStatus: {}, // Map of sessionId -> isTyping
 };
 
 // Async thunks
@@ -110,6 +111,15 @@ const chatSlice = createSlice({
     setCurrentSession: (state, action) => {
       state.currentSession = action.payload;
     },
+    setTypingStatus: (state, action) => {
+      const { sessionId, isTyping } = action.payload;
+      state.typingStatus[sessionId] = isTyping;
+
+      // Also update the current session typing status if it matches
+      if (state.currentSession && state.currentSession._id === sessionId) {
+        state.currentSession.isTyping = isTyping;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -124,7 +134,7 @@ const chatSlice = createSlice({
       })
       .addCase(getChatSession.fulfilled, (state, action) => {
         state.currentSession = action.payload.chatSession;
-        
+
         // Update in sessions list if present
         const index = state.chatSessions.findIndex(
           (session) => session._id === action.payload.chatSession._id
@@ -137,13 +147,13 @@ const chatSlice = createSlice({
         if (state.currentSession && state.currentSession._id === action.payload.userMessage.sessionId) {
           // Add user message
           state.currentSession.messages.push(action.payload.userMessage);
-          
+
           // Add AI response if available
           if (action.payload.aiResponse) {
             state.currentSession.messages.push(action.payload.aiResponse);
           }
         }
-        
+
         // Update in sessions list if present
         const index = state.chatSessions.findIndex(
           (session) => session._id === action.payload.userMessage.sessionId
@@ -152,10 +162,10 @@ const chatSlice = createSlice({
           if (!state.chatSessions[index].messages) {
             state.chatSessions[index].messages = [];
           }
-          
+
           // Add user message
           state.chatSessions[index].messages.push(action.payload.userMessage);
-          
+
           // Add AI response if available
           if (action.payload.aiResponse) {
             state.chatSessions[index].messages.push(action.payload.aiResponse);
@@ -165,6 +175,6 @@ const chatSlice = createSlice({
   },
 });
 
-export const { setPage, setLimit, setCurrentSession } = chatSlice.actions;
+export const { setPage, setLimit, setCurrentSession, setTypingStatus } = chatSlice.actions;
 
 export default chatSlice.reducer;

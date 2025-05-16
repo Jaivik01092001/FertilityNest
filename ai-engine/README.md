@@ -33,7 +33,7 @@ This is the AI engine for FertilityNest, a comprehensive fertility support platf
 - Python 3.8+
 - Flask for API endpoints
 - TensorFlow for emotion detection models
-- OpenAI API integration
+- Google Gemini API integration
 - Pandas for data processing
 - SQLite for local storage (optional)
 
@@ -56,7 +56,7 @@ ai-engine/
 ### Prerequisites
 - Python 3.8+
 - pip
-- OpenAI API key
+- Google Gemini API key
 - Virtual environment (recommended)
 
 ### Installation
@@ -76,7 +76,7 @@ ai-engine/
    ```
    FLASK_APP=app.py
    FLASK_ENV=development
-   OPENAI_API_KEY=your_openai_api_key
+   GEMINI_API_KEY=your_gemini_api_key
    PORT=5001
    BACKEND_URL=http://localhost:5000/api
    ```

@@ -16,9 +16,10 @@ This is the backend server for FertilityNest, a comprehensive fertility support 
   - Protocol-specific data models
 
 - **AI Integration**
-  - Communication with AI engine
+  - Communication with Google Gemini AI engine
   - User message history management
   - Distress detection forwarding
+  - User-provided API key management
 
 - **Partner Connectivity**
   - Partner invitation and connection
@@ -88,6 +89,7 @@ backend/
    EMAIL_PASS=your_email_password
    AI_ENGINE_URL=http://localhost:5001/api
    CLIENT_URL=http://localhost:5173
+   GEMINI_API_KEY=your_gemini_api_key
    ```
 
 ### Running the Application
