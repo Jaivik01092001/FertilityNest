@@ -158,28 +158,23 @@ const seedUsers = async (counts) => {
   const users = [];
 
   // Create regular users
-  for (let i = 1; i <= counts.regular; i++) {
+  for (let i = 1; i <= 1; i++) {
     const user = await createUser('user', i);
     users.push(user);
   }
 
   // Create partner users
-  for (let i = 1; i <= counts.partner; i++) {
+  for (let i = 1; i <= 1; i++) {
     const user = await createUser('partner', i);
     users.push(user);
   }
 
   // Create admin users
-  for (let i = 1; i <= counts.admin; i++) {
+  for (let i = 1; i <= 1; i++) {
     const user = await createUser('admin', i);
     users.push(user);
   }
 
-  // Create moderator users
-  for (let i = 1; i <= counts.moderator; i++) {
-    const user = await createUser('moderator', i);
-    users.push(user);
-  }
 
   return users;
 };

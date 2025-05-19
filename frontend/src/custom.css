@@ -78,6 +78,14 @@
   color: var(--bs-purple-dark);
 }
 
+/* Auth container with max-width */
+.auth-container {
+  width: 100%;
+  max-width: 1200px !important;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 /* Typing indicator animation for chat */
 .typing-dot {
   display: inline-block;

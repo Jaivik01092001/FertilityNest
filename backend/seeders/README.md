@@ -22,6 +22,10 @@ The seeder behavior can be configured using environment variables:
 | `CLEAR_EXISTING_DATA` | Set to `true` to clear existing data before seeding | `false` |
 | `ENABLE_PRODUCTION_SEEDING` | Set to `true` to enable seeding in production (not recommended) | `false` |
 
+## Intelligent Seeding
+
+The seeder now checks if there are already users in the database before running. If users exist, seeding will be skipped unless `CLEAR_EXISTING_DATA=true` is set. This prevents duplicate data and ensures seeding only runs on fresh installations.
+
 ## Seeded Data
 
 ### Users

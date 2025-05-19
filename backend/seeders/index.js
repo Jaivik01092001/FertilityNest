@@ -28,7 +28,8 @@ const trackerSeeder = require('./tracker.seeder');
 // Configuration
 const config = {
   // Set to true to clear existing data before seeding
-  clearExistingData: process.env.CLEAR_EXISTING_DATA === 'true' || true, // Default to true for development
+  // Default to false to prevent accidental data loss
+  clearExistingData: process.env.CLEAR_EXISTING_DATA === 'true',
 
   // Number of records to create
   counts: {
@@ -151,8 +152,9 @@ const clearExistingData = async () => {
 
 /**
  * Check if seeding should be skipped
+ * @returns {Promise<boolean>} Whether seeding should be skipped
  */
-const shouldSkipSeeding = () => {
+const shouldSkipSeeding = async () => {
   // Skip in production unless explicitly enabled
   if (process.env.NODE_ENV === 'production' && process.env.ENABLE_PRODUCTION_SEEDING !== 'true') {
     return true;
@@ -161,6 +163,26 @@ const shouldSkipSeeding = () => {
   // Skip if explicitly disabled
   if (process.env.DISABLE_SEEDING === 'true') {
     return true;
+  }
+
+  // Skip if database already has users (unless CLEAR_EXISTING_DATA is true)
+  if (process.env.CLEAR_EXISTING_DATA !== 'true') {
+    try {
+      // Import User model
+      const User = require('../models/user.model');
+
+      // Check if there are any users in the database
+      const userCount = await User.countDocuments();
+
+      if (userCount > 0) {
+        console.log(`🔍 Found ${userCount} existing users in the database. Skipping seeding.`);
+        return true;
+      }
+    } catch (error) {
+      console.error('❌ Error checking for existing users:', error);
+      // If there's an error checking, we'll proceed with seeding
+      return false;
+    }
   }
 
   return false;

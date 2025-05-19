@@ -55,7 +55,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fertility
       try {
         const { seedDatabase, shouldSkipSeeding } = require('./seeders');
 
-        if (!shouldSkipSeeding()) {
+        // Check if seeding should be skipped
+        const skipSeeding = await shouldSkipSeeding();
+
+        if (!skipSeeding) {
           console.log('🌱 Starting database seeding...');
           const result = await seedDatabase();
           console.log('🎉 Database seeding completed successfully!');
@@ -64,7 +67,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fertility
             console.log(`   - ${key}: ${value}`);
           });
         } else {
-          console.log('⏭️ Database seeding skipped (disabled by configuration)');
+          console.log('⏭️ Database seeding skipped (disabled by configuration or data already exists)');
         }
       } catch (error) {
         console.error('❌ Error seeding database:', error);
