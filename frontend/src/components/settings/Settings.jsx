@@ -2,65 +2,71 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../layout/Layout';
 import GeminiApiSettings from './GeminiApiSettings';
+import { Container, Row, Col, Card, Nav } from 'react-bootstrap';
 
 const Settings = () => {
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Settings</h1>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Container className="py-4">
+        <h3 className="mb-4">Settings</h3>
+
+        <Row className="g-4">
           {/* Sidebar */}
-          <div className="md:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
-                Settings Menu
-              </h2>
-              <nav className="space-y-2">
-                <Link 
-                  to="/profile" 
-                  className="block px-4 py-2 rounded-md hover:bg-purple-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
-                >
-                  Profile Settings
-                </Link>
-                <Link 
-                  to="/change-password" 
-                  className="block px-4 py-2 rounded-md hover:bg-purple-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
-                >
-                  Change Password
-                </Link>
-                <Link 
-                  to="/emergency-contacts" 
-                  className="block px-4 py-2 rounded-md hover:bg-purple-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
-                >
-                  Emergency Contacts
-                </Link>
-                <Link 
-                  to="/settings" 
-                  className="block px-4 py-2 rounded-md bg-purple-50 dark:bg-purple-900 text-purple-600 dark:text-purple-400 font-medium"
-                >
-                  AI Settings
-                </Link>
-                <Link 
-                  to="/partner/connect" 
-                  className="block px-4 py-2 rounded-md hover:bg-purple-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
-                >
-                  Partner Connection
-                </Link>
-              </nav>
-            </div>
-          </div>
-          
+          <Col md={4} lg={3}>
+            <Card className="shadow">
+              <Card.Header>
+                <h5 className="mb-0">Settings Menu</h5>
+              </Card.Header>
+              <Card.Body className="p-0">
+                <Nav className="flex-column">
+                  <Nav.Link
+                    as={Link}
+                    to="/profile"
+                    className="border-bottom"
+                  >
+                    Profile Settings
+                  </Nav.Link>
+                  <Nav.Link
+                    as={Link}
+                    to="/change-password"
+                    className="border-bottom"
+                  >
+                    Change Password
+                  </Nav.Link>
+                  <Nav.Link
+                    as={Link}
+                    to="/emergency-contacts"
+                    className="border-bottom"
+                  >
+                    Emergency Contacts
+                  </Nav.Link>
+                  <Nav.Link
+                    as={Link}
+                    to="/settings"
+                    active
+                    className="border-bottom"
+                  >
+                    AI Settings
+                  </Nav.Link>
+                  <Nav.Link
+                    as={Link}
+                    to="/partner/connect"
+                  >
+                    Partner Connection
+                  </Nav.Link>
+                </Nav>
+              </Card.Body>
+            </Card>
+          </Col>
+
           {/* Main content */}
-          <div className="md:col-span-2">
+          <Col md={8} lg={9}>
             <GeminiApiSettings />
-            
+
             {/* Additional settings sections can be added here */}
-          </div>
-        </div>
-      </div>
+          </Col>
+        </Row>
+      </Container>
     </Layout>
   );
 };

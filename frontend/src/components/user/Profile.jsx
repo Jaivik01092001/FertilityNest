@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { updateProfile } from '../../store/slices/authSlice';
 import useApi from '../../hooks/useApi';
 import Layout from '../layout/Layout';
+import { Card, Form, Button, Row, Col, Alert, Spinner } from 'react-bootstrap';
 
 const Profile = () => {
   const { user } = useSelector((state) => state.auth);
@@ -108,8 +109,8 @@ const Profile = () => {
   if (!user) {
     return (
       <Layout>
-        <div className="text-center py-8">
-          <p className="text-gray-500">Loading profile...</p>
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '250px' }}>
+          <Spinner animation="border" variant="purple" />
         </div>
       </Layout>
     );
@@ -117,296 +118,254 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              Profile Information
-            </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+      <div className="container py-4">
+        <Card className="shadow">
+          <Card.Header>
+            <h4 className="mb-1">Profile Information</h4>
+            <p className="text-muted small mb-0">
               Update your personal details and preferences
             </p>
-          </div>
+          </Card.Header>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 m-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">
-                Error
-              </h3>
-              <div className="mt-2 text-sm text-red-700">
-                <p>{error}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+          <Card.Body>
 
-      {updateSuccess && (
-        <div className="rounded-md bg-green-50 p-4 m-4">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">
-                Profile Updated
-              </h3>
-              <div className="mt-2 text-sm text-green-700">
-                <p>Your profile has been updated successfully.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+            {error && (
+              <Alert variant="danger" className="mb-4">
+                <Alert.Heading as="h5">Error</Alert.Heading>
+                <p className="mb-0">{error}</p>
+              </Alert>
+            )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="px-4 py-5 sm:p-6">
-          <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-            <div className="sm:col-span-3">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="name"
-                  id="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
+            {updateSuccess && (
+              <Alert variant="success" className="mb-4">
+                <Alert.Heading as="h5">Profile Updated</Alert.Heading>
+                <p className="mb-0">Your profile has been updated successfully.</p>
+              </Alert>
+            )}
 
-            <div className="sm:col-span-3">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                Email Address
-              </label>
-              <div className="mt-1">
-                <input
-                  type="email"
-                  name="email"
-                  id="email"
-                  value={user.email}
-                  disabled
-                  className="shadow-sm bg-gray-50 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Email cannot be changed
-              </p>
-            </div>
+            <Form onSubmit={handleSubmit}>
+              <Row className="g-3">
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Full Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="name"
+                      id="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
 
-            <div className="sm:col-span-3">
-              <label htmlFor="fertilityStage" className="block text-sm font-medium text-gray-700">
-                Fertility Stage
-              </label>
-              <div className="mt-1">
-                <select
-                  id="fertilityStage"
-                  name="fertilityStage"
-                  value={formData.fertilityStage}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Email Address</Form.Label>
+                    <Form.Control
+                      type="email"
+                      name="email"
+                      id="email"
+                      value={user.email}
+                      disabled
+                      className="bg-light"
+                    />
+                    <Form.Text className="text-muted">
+                      Email cannot be changed
+                    </Form.Text>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Fertility Stage</Form.Label>
+                    <Form.Select
+                      id="fertilityStage"
+                      name="fertilityStage"
+                      value={formData.fertilityStage}
+                      onChange={handleChange}
+                    >
+                      <option value="Trying to Conceive">Trying to Conceive</option>
+                      <option value="IVF">IVF</option>
+                      <option value="IUI">IUI</option>
+                      <option value="PCOS Management">PCOS Management</option>
+                      <option value="Pregnancy">Pregnancy</option>
+                      <option value="Postpartum">Postpartum</option>
+                      <option value="Other">Other</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Journey Type</Form.Label>
+                    <Form.Select
+                      id="journeyType"
+                      name="journeyType"
+                      value={formData.journeyType}
+                      onChange={handleChange}
+                    >
+                      <option value="Natural">Natural</option>
+                      <option value="IVF">IVF</option>
+                      <option value="IUI">IUI</option>
+                      <option value="PCOS">PCOS</option>
+                      <option value="Other">Other</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Date of Birth</Form.Label>
+                    <Form.Control
+                      type="date"
+                      name="dateOfBirth"
+                      id="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+
+                <Col md={6}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Phone Number</Form.Label>
+                    <Form.Control
+                      type="tel"
+                      name="phone"
+                      id="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+
+              <Card className="mt-4 mb-4">
+                <Card.Header>
+                  <h5 className="mb-0">Notification Preferences</h5>
+                </Card.Header>
+                <Card.Body>
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      id="preferences.notifications.email"
+                      name="preferences.notifications.email"
+                      checked={formData.preferences.notifications.email}
+                      onChange={handleChange}
+                      label={
+                        <div>
+                          <span className="fw-medium">Email Notifications</span>
+                          <p className="text-muted small mb-0">Receive updates and reminders via email</p>
+                        </div>
+                      }
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      id="preferences.notifications.push"
+                      name="preferences.notifications.push"
+                      checked={formData.preferences.notifications.push}
+                      onChange={handleChange}
+                      label={
+                        <div>
+                          <span className="fw-medium">Push Notifications</span>
+                          <p className="text-muted small mb-0">Receive push notifications in your browser</p>
+                        </div>
+                      }
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      id="preferences.notifications.sms"
+                      name="preferences.notifications.sms"
+                      checked={formData.preferences.notifications.sms}
+                      onChange={handleChange}
+                      label={
+                        <div>
+                          <span className="fw-medium">SMS Notifications</span>
+                          <p className="text-muted small mb-0">Receive text message reminders (may incur charges)</p>
+                        </div>
+                      }
+                    />
+                  </Form.Group>
+                </Card.Body>
+              </Card>
+
+              <Card className="mb-4">
+                <Card.Header>
+                  <h5 className="mb-0">Privacy Preferences</h5>
+                </Card.Header>
+                <Card.Body>
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      id="preferences.privacy.shareWithPartner"
+                      name="preferences.privacy.shareWithPartner"
+                      checked={formData.preferences.privacy.shareWithPartner}
+                      onChange={handleChange}
+                      label={
+                        <div>
+                          <span className="fw-medium">Share with Partner</span>
+                          <p className="text-muted small mb-0">Allow your partner to view your cycle and medication data</p>
+                        </div>
+                      }
+                    />
+                  </Form.Group>
+
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      type="checkbox"
+                      id="preferences.privacy.anonymousInCommunity"
+                      name="preferences.privacy.anonymousInCommunity"
+                      checked={formData.preferences.privacy.anonymousInCommunity}
+                      onChange={handleChange}
+                      label={
+                        <div>
+                          <span className="fw-medium">Anonymous in Community</span>
+                          <p className="text-muted small mb-0">Hide your real name in community posts and comments</p>
+                        </div>
+                      }
+                    />
+                  </Form.Group>
+                </Card.Body>
+              </Card>
+
+              <Card className="mb-4">
+                <Card.Header>
+                  <h5 className="mb-0">Theme Preference</h5>
+                </Card.Header>
+                <Card.Body>
+                  <Form.Group>
+                    <Form.Select
+                      id="preferences.theme"
+                      name="preferences.theme"
+                      value={formData.preferences.theme}
+                      onChange={handleChange}
+                    >
+                      <option value="light">Light</option>
+                      <option value="dark">Dark</option>
+                      <option value="auto">Auto (System Default)</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Card.Body>
+              </Card>
+
+              <div className="d-flex justify-content-end mt-3">
+                <Button
+                  type="submit"
+                  variant="purple"
+                  disabled={loading}
                 >
-                  <option value="Trying to Conceive">Trying to Conceive</option>
-                  <option value="IVF">IVF</option>
-                  <option value="IUI">IUI</option>
-                  <option value="PCOS Management">PCOS Management</option>
-                  <option value="Pregnancy">Pregnancy</option>
-                  <option value="Postpartum">Postpartum</option>
-                  <option value="Other">Other</option>
-                </select>
+                  {loading ? 'Saving...' : 'Save'}
+                </Button>
               </div>
-            </div>
-
-            <div className="sm:col-span-3">
-              <label htmlFor="journeyType" className="block text-sm font-medium text-gray-700">
-                Journey Type
-              </label>
-              <div className="mt-1">
-                <select
-                  id="journeyType"
-                  name="journeyType"
-                  value={formData.journeyType}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                >
-                  <option value="Natural">Natural</option>
-                  <option value="IVF">IVF</option>
-                  <option value="IUI">IUI</option>
-                  <option value="PCOS">PCOS</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="sm:col-span-3">
-              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700">
-                Date of Birth
-              </label>
-              <div className="mt-1">
-                <input
-                  type="date"
-                  name="dateOfBirth"
-                  id="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-
-            <div className="sm:col-span-3">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-                Phone Number
-              </label>
-              <div className="mt-1">
-                <input
-                  type="tel"
-                  name="phone"
-                  id="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <h3 className="text-lg font-medium text-gray-900">Notification Preferences</h3>
-            <div className="mt-4 space-y-4">
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="preferences.notifications.email"
-                    name="preferences.notifications.email"
-                    type="checkbox"
-                    checked={formData.preferences.notifications.email}
-                    onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="preferences.notifications.email" className="font-medium text-gray-700">
-                    Email Notifications
-                  </label>
-                  <p className="text-gray-500">Receive updates and reminders via email</p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="preferences.notifications.push"
-                    name="preferences.notifications.push"
-                    type="checkbox"
-                    checked={formData.preferences.notifications.push}
-                    onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="preferences.notifications.push" className="font-medium text-gray-700">
-                    Push Notifications
-                  </label>
-                  <p className="text-gray-500">Receive push notifications in your browser</p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="preferences.notifications.sms"
-                    name="preferences.notifications.sms"
-                    type="checkbox"
-                    checked={formData.preferences.notifications.sms}
-                    onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="preferences.notifications.sms" className="font-medium text-gray-700">
-                    SMS Notifications
-                  </label>
-                  <p className="text-gray-500">Receive text message reminders (may incur charges)</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <h3 className="text-lg font-medium text-gray-900">Privacy Preferences</h3>
-            <div className="mt-4 space-y-4">
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="preferences.privacy.shareWithPartner"
-                    name="preferences.privacy.shareWithPartner"
-                    type="checkbox"
-                    checked={formData.preferences.privacy.shareWithPartner}
-                    onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="preferences.privacy.shareWithPartner" className="font-medium text-gray-700">
-                    Share with Partner
-                  </label>
-                  <p className="text-gray-500">Allow your partner to view your cycle and medication data</p>
-                </div>
-              </div>
-
-              <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id="preferences.privacy.anonymousInCommunity"
-                    name="preferences.privacy.anonymousInCommunity"
-                    type="checkbox"
-                    checked={formData.preferences.privacy.anonymousInCommunity}
-                    onChange={handleChange}
-                    className="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300 rounded"
-                  />
-                </div>
-                <div className="ml-3 text-sm">
-                  <label htmlFor="preferences.privacy.anonymousInCommunity" className="font-medium text-gray-700">
-                    Anonymous in Community
-                  </label>
-                  <p className="text-gray-500">Hide your real name in community posts and comments</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <h3 className="text-lg font-medium text-gray-900">Theme Preference</h3>
-            <div className="mt-4">
-              <select
-                id="preferences.theme"
-                name="preferences.theme"
-                value={formData.preferences.theme}
-                onChange={handleChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
-              >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-                <option value="auto">Auto (System Default)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-purple-300"
-          >
-            {loading ? 'Saving...' : 'Save'}
-          </button>
-        </div>
-      </form>
-        </div>
+            </Form>
+          </Card.Body>
+        </Card>
       </div>
     </Layout>
   );

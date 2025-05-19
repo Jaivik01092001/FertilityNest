@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button as BootstrapButton, Form, Card as BootstrapCard, Badge as BootstrapBadge } from 'react-bootstrap';
 
 /**
  * Button component with different variants
@@ -20,32 +21,36 @@ export const Button = ({
   className = '',
   ...props
 }) => {
-  const baseClasses = 'inline-flex items-center justify-center font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed';
-
-  const sizeClasses = {
-    sm: 'px-3 py-2 text-xs rounded-md',
-    md: 'px-4 py-3 text-sm rounded-lg',
-    lg: 'px-6 py-4 text-base rounded-lg',
+  // Map our custom variants to Bootstrap variants
+  const variantMap = {
+    primary: 'purple',
+    secondary: 'pink',
+    accent: 'green',
+    outline: 'outline-purple',
+    text: 'link',
+    error: 'danger'
   };
 
-  const variantClasses = {
-    primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500 border border-transparent',
-    secondary: 'bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-400 border border-transparent',
-    accent: 'bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-400 border border-transparent',
-    outline: 'border-2 border-primary-600 text-primary-600 bg-transparent hover:bg-primary-50 focus:ring-primary-500',
-    text: 'text-primary-600 bg-transparent hover:bg-primary-50 focus:ring-primary-500 border border-transparent',
+  // Map our custom sizes to Bootstrap sizes
+  const sizeMap = {
+    sm: 'sm',
+    md: '',
+    lg: 'lg'
   };
 
-  const widthClass = fullWidth ? 'w-full' : '';
+  const bootstrapVariant = variantMap[variant] || 'primary';
+  const bootstrapSize = sizeMap[size];
 
   return (
-    <button
-      className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${widthClass} ${className}`}
+    <BootstrapButton
+      variant={bootstrapVariant}
+      size={bootstrapSize}
       disabled={disabled}
+      className={`${fullWidth ? 'w-100' : ''} ${className}`}
       {...props}
     >
       {children}
-    </button>
+    </BootstrapButton>
   );
 };
 
@@ -68,21 +73,19 @@ export const Input = ({
   ...props
 }) => {
   return (
-    <div className="mb-4">
+    <Form.Group className="mb-3">
       {label && (
-        <label htmlFor={props.id} className="block text-sm font-medium text-gray-700 mb-1">
-          {label} {props.required && <span className="text-red-500">*</span>}
-        </label>
+        <Form.Label htmlFor={props.id}>
+          {label} {props.required && <span className="text-danger">*</span>}
+        </Form.Label>
       )}
-      <input
-        className={`block w-full px-4 py-3 border ${error ? 'border-red-300' : 'border-gray-300'}
-          rounded-lg shadow-input focus:outline-none focus:ring-2
-          ${error ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-primary-500 focus:border-primary-500'}
-          text-base ${className}`}
+      <Form.Control
+        className={className}
+        isInvalid={!!error}
         {...props}
       />
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-    </div>
+      {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
+    </Form.Group>
   );
 };
 
@@ -99,12 +102,14 @@ export const Card = ({
   ...props
 }) => {
   return (
-    <div
-      className={`bg-white rounded-xl shadow-soft p-6 transition-all duration-200 hover:shadow-card ${className}`}
+    <BootstrapCard
+      className={`custom-card ${className}`}
       {...props}
     >
-      {children}
-    </div>
+      <BootstrapCard.Body>
+        {children}
+      </BootstrapCard.Body>
+    </BootstrapCard>
   );
 };
 
@@ -127,18 +132,15 @@ export const Select = ({
   ...props
 }) => {
   return (
-    <div className="mb-4">
+    <Form.Group className="mb-3">
       {label && (
-        <label htmlFor={props.id} className="block text-sm font-medium text-gray-700 mb-1">
-          {label} {props.required && <span className="text-red-500">*</span>}
-        </label>
+        <Form.Label htmlFor={props.id}>
+          {label} {props.required && <span className="text-danger">*</span>}
+        </Form.Label>
       )}
-      <select
-        className={`block w-full pl-4 pr-10 py-3 text-base border
-          ${error ? 'border-red-300' : 'border-gray-300'}
-          rounded-lg shadow-input focus:outline-none focus:ring-2
-          ${error ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-primary-500 focus:border-primary-500'}
-          ${className}`}
+      <Form.Select
+        className={className}
+        isInvalid={!!error}
         {...props}
       >
         {options.map((option) => (
@@ -146,9 +148,9 @@ export const Select = ({
             {option.label}
           </option>
         ))}
-      </select>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-    </div>
+      </Form.Select>
+      {error && <Form.Control.Feedback type="invalid">{error}</Form.Control.Feedback>}
+    </Form.Group>
   );
 };
 
@@ -165,22 +167,27 @@ export const Badge = ({
   className = '',
   ...props
 }) => {
-  const variantClasses = {
-    primary: 'bg-primary-100 text-primary-800',
-    secondary: 'bg-secondary-100 text-secondary-800',
-    accent: 'bg-accent-100 text-accent-800',
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    error: 'bg-red-100 text-red-800',
+  // Map our custom variants to Bootstrap variants
+  const variantMap = {
+    primary: 'primary',
+    secondary: 'secondary',
+    accent: 'success',
+    success: 'success',
+    warning: 'warning',
+    error: 'danger',
   };
 
+  const bootstrapVariant = variantMap[variant] || 'primary';
+
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${variantClasses[variant]} ${className}`}
+    <BootstrapBadge
+      bg={bootstrapVariant}
+      className={`${className}`}
+      pill
       {...props}
     >
       {children}
-    </span>
+    </BootstrapBadge>
   );
 };
 

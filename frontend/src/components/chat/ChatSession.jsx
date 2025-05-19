@@ -5,6 +5,9 @@ import { toast } from 'react-toastify';
 import { getChatSession, sendMessage, setTypingStatus } from '../../store/slices/chatSlice';
 import useApi from '../../hooks/useApi';
 import { getSocket, initSocket } from '../../services/socketService';
+import DistressButton from '../common/DistressButton';
+import { Card, Button, Form, Spinner, Alert } from 'react-bootstrap';
+import { SendFill, ArrowLeft } from 'react-bootstrap-icons';
 
 const ChatSession = () => {
   const { sessionId } = useParams();
@@ -82,155 +85,159 @@ const ChatSession = () => {
 
   if (loadingSession && !currentSession) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '250px' }}>
+        <Spinner animation="border" variant="purple" />
       </div>
     );
   }
 
   if (sessionError && !currentSession) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-500">{sessionError}</p>
-        <button
+      <div className="text-center py-5">
+        <Alert variant="danger">{sessionError}</Alert>
+        <Button
+          variant="purple"
           onClick={() => fetchSession(sessionId)}
-          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          className="mt-3"
         >
           Try Again
-        </button>
+        </Button>
       </div>
     );
   }
 
   if (!currentSession) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Chat session not found</p>
-        <Link
+      <div className="text-center py-5">
+        <p className="text-muted">Chat session not found</p>
+        <Button
+          as={Link}
           to="/chat"
-          className="mt-4 inline-block px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          variant="purple"
+          className="mt-3"
         >
-          Back to Chat List
-        </Link>
+          <ArrowLeft className="me-1" /> Back to Chat List
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg flex flex-col h-[calc(100vh-8rem)]">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+    <Card className="shadow d-flex flex-column" style={{ height: 'calc(100vh - 8rem)' }}>
+      <Card.Header className="d-flex justify-content-between align-items-center">
         <div>
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            {currentSession.title || 'Chat with Anaira'}
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+          <h4 className="mb-1">{currentSession.title || 'Chat with Anaira'}</h4>
+          <p className="text-muted small mb-0">
             {new Date(currentSession.createdAt).toLocaleString()}
           </p>
         </div>
-        <Link
-          to="/chat"
-          className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-        >
-          Back to Chat List
-        </Link>
-      </div>
+        <div className="d-flex gap-2">
+          <DistressButton size="sm" />
+          <Button
+            as={Link}
+            to="/chat"
+            variant="outline-secondary"
+            size="sm"
+            className="d-flex align-items-center"
+          >
+            <ArrowLeft className="me-1" /> Back
+          </Button>
+        </div>
+      </Card.Header>
 
       {sendError && (
-        <div className="px-4 py-3 bg-red-50 text-red-700 text-sm">
+        <Alert variant="danger" className="m-3">
           {sendError}
-        </div>
+        </Alert>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {currentSession.messages && currentSession.messages.length > 0 ? (
-          <>
-            {currentSession.messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+      <Card.Body className="flex-grow-1 overflow-auto p-3">
+        <div className="d-flex flex-column gap-3">
+          {currentSession.messages && currentSession.messages.length > 0 ? (
+            <>
+              {currentSession.messages.map((msg, index) => (
                 <div
-                  className={`max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl px-4 py-2 rounded-lg ${
-                    msg.sender === 'user'
-                      ? 'bg-purple-100 text-purple-900'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
+                  key={index}
+                  className={`d-flex ${msg.sender === 'user' ? 'justify-content-end' : 'justify-content-start'}`}
                 >
-                  <div className="text-sm">
-                    {msg.content.split('\n').map((line, i) => (
-                      <React.Fragment key={i}>
-                        {line}
-                        {i < msg.content.split('\n').length - 1 && <br />}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500 text-right">
-                    {new Date(msg.timestamp).toLocaleTimeString()}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* Typing indicator */}
-            {currentSession.isTyping && (
-              <div className="flex justify-start">
-                <div className="max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl px-4 py-2 rounded-lg bg-gray-100">
-                  <div className="flex space-x-1">
-                    <div className="typing-dot bg-gray-500"></div>
-                    <div className="typing-dot bg-gray-500 animation-delay-200"></div>
-                    <div className="typing-dot bg-gray-500 animation-delay-400"></div>
+                  <div
+                    className={`p-3 rounded-3 ${msg.sender === 'user'
+                      ? 'bg-purple bg-opacity-10 text-dark'
+                      : 'bg-light text-dark'
+                      }`}
+                    style={{ maxWidth: '75%' }}
+                  >
+                    <div>
+                      {msg.content.split('\n').map((line, i) => (
+                        <React.Fragment key={i}>
+                          {line}
+                          {i < msg.content.split('\n').length - 1 && <br />}
+                        </React.Fragment>
+                      ))}
+                    </div>
+                    <div className="mt-2 text-end small text-muted">
+                      {new Date(msg.timestamp).toLocaleTimeString()}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </>
-        ) : (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No messages yet. Start the conversation!</p>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
+              ))}
 
-      <div className="px-4 py-4 sm:px-6 border-t border-gray-200">
-        <form onSubmit={handleSendMessage} className="flex space-x-3">
-          <div className="flex-1">
-            <label htmlFor="message" className="sr-only">
-              Message
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              rows="2"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-              placeholder="Type your message..."
-              disabled={sendingMessage}
-            />
-          </div>
-          <div className="flex-shrink-0">
-            <button
-              type="submit"
-              disabled={sendingMessage || !message.trim()}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-purple-300"
-            >
-              {sendingMessage ? (
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-              ) : (
-                <svg className="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
-                </svg>
+              {/* Typing indicator */}
+              {currentSession.isTyping && (
+                <div className="d-flex justify-content-start">
+                  <div className="p-3 rounded-3 bg-light" style={{ maxWidth: '75%' }}>
+                    <div className="d-flex gap-1">
+                      <div className="typing-dot bg-secondary"></div>
+                      <div className="typing-dot bg-secondary animation-delay-200"></div>
+                      <div className="typing-dot bg-secondary animation-delay-400"></div>
+                    </div>
+                  </div>
+                </div>
               )}
-              Send
-            </button>
+            </>
+          ) : (
+            <div className="text-center py-5">
+              <p className="text-muted">No messages yet. Start the conversation!</p>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </Card.Body>
+
+      <Card.Footer className="border-top p-3">
+        <Form onSubmit={handleSendMessage}>
+          <div className="d-flex gap-2">
+            <Form.Group className="flex-grow-1 mb-0">
+              <Form.Control
+                as="textarea"
+                id="message"
+                name="message"
+                rows="2"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message..."
+                disabled={sendingMessage}
+              />
+            </Form.Group>
+            <div>
+              <Button
+                type="submit"
+                variant="purple"
+                disabled={sendingMessage || !message.trim()}
+                className="d-flex align-items-center h-100"
+              >
+                {sendingMessage ? (
+                  <Spinner animation="border" size="sm" className="me-2" />
+                ) : (
+                  <SendFill className="me-2" />
+                )}
+                Send
+              </Button>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </Form>
+      </Card.Footer>
+    </Card>
   );
 };
 

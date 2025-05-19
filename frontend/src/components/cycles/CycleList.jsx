@@ -1,12 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
 import { getCycles } from '../../store/slices/cycleSlice';
 import useApi from '../../hooks/useApi';
+import Layout from '../layout/Layout';
+import { Card, Button, Spinner, Alert, ListGroup, Badge, Pagination } from 'react-bootstrap';
+import { PlusLg, Calendar } from 'react-bootstrap-icons';
 
 const CycleList = () => {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  
+
   const { cycles, totalCycles } = useSelector((state) => state.cycle);
   const { execute, loading, error } = useApi({
     asyncAction: getCycles,
@@ -25,101 +30,138 @@ const CycleList = () => {
     setPage(newPage);
   };
 
-  if (loading) {
-    return <div className="text-center py-4">Loading cycles...</div>;
+  const handleViewCycle = (cycleId) => {
+    navigate(`/cycles/${cycleId}`);
+  };
+
+  if (loading && cycles.length === 0) {
+    return (
+      <Layout>
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '250px' }}>
+          <Spinner animation="border" variant="purple" />
+        </div>
+      </Layout>
+    );
   }
 
-  if (error) {
+  if (error && cycles.length === 0) {
     return (
-      <div className="text-center py-4 text-red-500">
-        Error: {error}
-      </div>
+      <Layout>
+        <div className="text-center py-5">
+          <Alert variant="danger">{error}</Alert>
+          <Button
+            variant="purple"
+            onClick={loadCycles}
+            className="mt-3"
+          >
+            Try Again
+          </Button>
+        </div>
+      </Layout>
     );
   }
 
   if (cycles.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No cycles found.</p>
-        <button
-          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
-          onClick={() => {/* Navigate to create cycle page */}}
-        >
-          Track New Cycle
-        </button>
-      </div>
+      <Layout>
+        <Card className="shadow">
+          <Card.Body className="text-center py-5">
+            <Calendar className="text-muted mb-3" size={48} />
+            <h5>No cycles found</h5>
+            <p className="text-muted">
+              Start tracking your menstrual and fertility cycles.
+            </p>
+            <Button
+              as={Link}
+              to="/cycles/new"
+              variant="purple"
+              className="mt-3 d-inline-flex align-items-center"
+            >
+              <PlusLg className="me-2" />
+              Track New Cycle
+            </Button>
+          </Card.Body>
+        </Card>
+      </Layout>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-        <h3 className="text-lg font-medium leading-6 text-gray-900">
-          Your Cycles
-        </h3>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          Track and manage your menstrual and fertility cycles
-        </p>
-      </div>
-      
-      <ul className="divide-y divide-gray-200">
-        {cycles.map((cycle) => (
-          <li key={cycle._id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-purple-600">
-                  {new Date(cycle.startDate).toLocaleDateString()} - 
-                  {cycle.endDate 
-                    ? new Date(cycle.endDate).toLocaleDateString()
-                    : 'Ongoing'}
-                </p>
-                <p className="text-sm text-gray-500">
-                  {cycle.cycleLength ? `${cycle.cycleLength} days` : 'Length not set'}
-                </p>
-              </div>
-              <div>
-                <button
-                  className="text-purple-600 hover:text-purple-800"
-                  onClick={() => {/* Navigate to cycle details */}}
+    <Layout>
+      <Card className="shadow">
+        <Card.Header className="d-flex justify-content-between align-items-center">
+          <div>
+            <h4 className="mb-1">Your Cycles</h4>
+            <p className="text-muted small mb-0">
+              Track and manage your menstrual and fertility cycles
+            </p>
+          </div>
+          <Button
+            as={Link}
+            to="/cycles/new"
+            variant="purple"
+            className="d-flex align-items-center"
+          >
+            <PlusLg className="me-1" /> New Cycle
+          </Button>
+        </Card.Header>
+
+        <ListGroup variant="flush">
+          {cycles.map((cycle) => (
+            <ListGroup.Item
+              key={cycle._id}
+              className="border-start-0 border-end-0 py-3"
+              action
+              onClick={() => handleViewCycle(cycle._id)}
+            >
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 className="mb-1 text-purple fw-medium">
+                    {new Date(cycle.startDate).toLocaleDateString()} -
+                    {cycle.endDate
+                      ? new Date(cycle.endDate).toLocaleDateString()
+                      : 'Ongoing'}
+                  </h6>
+                  <div className="d-flex align-items-center text-muted small">
+                    <Badge bg={cycle.endDate ? "secondary" : "success"} pill className="me-2">
+                      {cycle.endDate ? "Completed" : "Active"}
+                    </Badge>
+                    <span>{cycle.cycleLength ? `${cycle.cycleLength} days` : 'Length not set'}</span>
+                  </div>
+                </div>
+                <Button
+                  variant="outline-purple"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewCycle(cycle._id);
+                  }}
                 >
                   View Details
-                </button>
+                </Button>
               </div>
-            </div>
-          </li>
-        ))}
-      </ul>
-      
-      {/* Pagination */}
-      {totalCycles > limit && (
-        <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-          <div className="flex-1 flex justify-between sm:hidden">
-            <button
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                page === 1
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page * limit >= totalCycles}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                page * limit >= totalCycles
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+            </ListGroup.Item>
+          ))}
+        </ListGroup>
+
+        {/* Pagination */}
+        {totalCycles > limit && (
+          <Card.Footer className="d-flex justify-content-between">
+            <Pagination className="m-0">
+              <Pagination.Prev
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+              />
+              <Pagination.Item active>{page}</Pagination.Item>
+              <Pagination.Next
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page * limit >= totalCycles}
+              />
+            </Pagination>
+          </Card.Footer>
+        )}
+      </Card>
+    </Layout>
   );
 };
 

@@ -1,0 +1,107 @@
+/* Custom Bootstrap Overrides */
+
+/* Define the purple color scheme */
+:root {
+  --bs-purple: #7c3aed;
+  --bs-purple-dark: #6d28d9;
+  --bs-purple-light: #8b5cf6;
+  --bs-purple-lighter: #ede9fe;
+}
+
+/* Custom button variants */
+.btn-purple {
+  background-color: var(--bs-purple);
+  border-color: var(--bs-purple);
+  color: white;
+}
+
+.btn-purple:hover,
+.btn-purple:focus,
+.btn-purple:active {
+  background-color: var(--bs-purple-dark);
+  border-color: var(--bs-purple-dark);
+  color: white;
+}
+
+.btn-outline-purple {
+  border-color: var(--bs-purple);
+  color: var(--bs-purple);
+}
+
+.btn-outline-purple:hover,
+.btn-outline-purple:focus,
+.btn-outline-purple:active {
+  background-color: var(--bs-purple-lighter);
+  border-color: var(--bs-purple);
+  color: var(--bs-purple);
+}
+
+/* Text colors */
+.text-purple {
+  color: var(--bs-purple) !important;
+}
+
+/* Background colors */
+.bg-purple {
+  background-color: var(--bs-purple) !important;
+}
+
+/* Badge variants */
+.badge.bg-purple {
+  background-color: var(--bs-purple) !important;
+}
+
+/* Form focus states */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--bs-purple-light);
+  box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25);
+}
+
+/* Spinner variants */
+.spinner-border.text-purple,
+.spinner-grow.text-purple {
+  color: var(--bs-purple) !important;
+}
+
+/* Pagination active state */
+.page-item.active .page-link {
+  background-color: var(--bs-purple);
+  border-color: var(--bs-purple);
+}
+
+.page-link {
+  color: var(--bs-purple);
+}
+
+.page-link:hover {
+  color: var(--bs-purple-dark);
+}
+
+/* Typing indicator animation for chat */
+.typing-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: typing 1.4s infinite both;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}

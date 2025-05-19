@@ -4,18 +4,20 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { getCommunities, joinCommunity } from '../../store/slices/communitySlice';
 import useApi from '../../hooks/useApi';
+import { Card, Button, Form, Spinner, Alert, Badge, ListGroup, Pagination, Row, Col } from 'react-bootstrap';
+import { PlusLg, People } from 'react-bootstrap-icons';
 
 const CommunityList = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [categoryFilter, setCategoryFilter] = useState('');
-  
+
   const { communities, userCommunities, totalCommunities } = useSelector((state) => state.community);
   const { execute: fetchCommunities, loading: loadingCommunities, error: communitiesError } = useApi({
     asyncAction: getCommunities,
     feature: 'community',
   });
-  
+
   const { execute: join, loading: joiningCommunity, error: joinError } = useApi({
     asyncAction: joinCommunity,
     feature: 'community',
@@ -26,9 +28,9 @@ const CommunityList = () => {
   }, [page, limit, categoryFilter]);
 
   const loadCommunities = async () => {
-    await fetchCommunities({ 
-      page, 
-      limit, 
+    await fetchCommunities({
+      page,
+      limit,
       category: categoryFilter || undefined
     });
   };
@@ -41,82 +43,80 @@ const CommunityList = () => {
     setCategoryFilter(e.target.value);
     setPage(1); // Reset to first page when filter changes
   };
-  
+
   const handleJoinCommunity = async (communityId) => {
     const result = await join(communityId);
-    
+
     if (result.success) {
       toast.success('Successfully joined community');
     } else {
       toast.error('Failed to join community');
     }
   };
-  
+
   const isUserInCommunity = (communityId) => {
     return userCommunities.some(community => community._id === communityId);
   };
 
   if (loadingCommunities && communities.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '250px' }}>
+        <Spinner animation="border" variant="purple" />
       </div>
     );
   }
 
   if (communitiesError && communities.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-500">{communitiesError}</p>
-        <button
+      <div className="text-center py-5">
+        <Alert variant="danger">{communitiesError}</Alert>
+        <Button
+          variant="purple"
           onClick={loadCommunities}
-          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          className="mt-3"
         >
           Try Again
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+    <Card className="shadow">
+      <Card.Header className="d-flex justify-content-between align-items-center">
         <div>
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Community Circles
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+          <h4 className="mb-1">Community Circles</h4>
+          <p className="text-muted small mb-0">
             Connect with others on similar fertility journeys
           </p>
         </div>
-        <Link
+        <Button
+          as={Link}
           to="/community/create"
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          variant="purple"
+          className="d-flex align-items-center"
         >
-          Create Community
-        </Link>
-      </div>
-      
+          <PlusLg className="me-1" /> Create Community
+        </Button>
+      </Card.Header>
+
       {joinError && (
-        <div className="px-4 py-3 bg-red-50 text-red-700 text-sm">
+        <Alert variant="danger" className="m-3">
           {joinError}
-        </div>
+        </Alert>
       )}
-      
+
       {/* Filters */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between">
-          <div className="flex space-x-4">
-            <div>
-              <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                Category
-              </label>
-              <select
+      <Card.Body className="bg-light border-bottom py-3">
+        <Row className="align-items-center">
+          <Col md={6}>
+            <Form.Group>
+              <Form.Label>Category</Form.Label>
+              <Form.Select
                 id="category"
                 name="category"
                 value={categoryFilter}
                 onChange={handleFilterChange}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
               >
                 <option value="">All Categories</option>
                 <option value="IVF">IVF</option>
@@ -127,142 +127,110 @@ const CommunityList = () => {
                 <option value="LGBTQ+">LGBTQ+</option>
                 <option value="Single Parents">Single Parents</option>
                 <option value="General Support">General Support</option>
-              </select>
-            </div>
-          </div>
-          <div className="mt-4 sm:mt-0">
-            <Link
+              </Form.Select>
+            </Form.Group>
+          </Col>
+          <Col md={6} className="d-flex justify-content-md-end mt-3 mt-md-0">
+            <Button
+              as={Link}
               to="/community/my-communities"
-              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+              variant="outline-secondary"
             >
               My Communities
-            </Link>
-          </div>
-        </div>
-      </div>
-      
+            </Button>
+          </Col>
+        </Row>
+      </Card.Body>
+
       {communities.length === 0 ? (
-        <div className="text-center py-12">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No communities found</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {categoryFilter 
-              ? `No communities found in the ${categoryFilter} category.` 
+        <Card.Body className="text-center py-5">
+          <People className="text-muted mb-3" size={48} />
+          <h5>No communities found</h5>
+          <p className="text-muted">
+            {categoryFilter
+              ? `No communities found in the ${categoryFilter} category.`
               : 'Get started by creating a new community.'}
           </p>
-          <div className="mt-6">
-            <Link
-              to="/community/create"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              <svg
-                className="-ml-1 mr-2 h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Create Community
-            </Link>
-          </div>
-        </div>
+          <Button
+            as={Link}
+            to="/community/create"
+            variant="purple"
+            className="mt-3 d-inline-flex align-items-center"
+          >
+            <PlusLg className="me-2" />
+            Create Community
+          </Button>
+        </Card.Body>
       ) : (
-        <ul className="divide-y divide-gray-200">
+        <ListGroup variant="flush">
           {communities.map((community) => (
-            <li key={community._id} className="px-4 py-4 sm:px-6 hover:bg-gray-50">
-              <div className="flex items-center justify-between">
+            <ListGroup.Item key={community._id} className="border-start-0 border-end-0 py-3">
+              <div className="d-flex justify-content-between align-items-start">
                 <div>
-                  <Link
-                    to={`/community/${community._id}`}
-                    className="text-lg font-medium text-purple-600 hover:text-purple-900"
-                  >
-                    {community.name}
-                  </Link>
-                  <p className="mt-1 text-sm text-gray-500">
+                  <h5>
+                    <Link
+                      to={`/community/${community._id}`}
+                      className="text-decoration-none text-purple"
+                    >
+                      {community.name}
+                    </Link>
+                  </h5>
+                  <p className="text-muted mb-2">
                     {community.description}
                   </p>
-                  <div className="mt-2 flex items-center">
-                    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800`}>
+                  <div className="d-flex align-items-center">
+                    <Badge bg="purple" pill className="me-2">
                       {community.category}
-                    </span>
-                    <span className="ml-2 text-xs text-gray-500">
+                    </Badge>
+                    <small className="text-muted">
                       {community.memberCount || 0} members
-                    </span>
+                    </small>
                   </div>
                 </div>
                 <div>
                   {isUserInCommunity(community._id) ? (
-                    <Link
+                    <Button
+                      as={Link}
                       to={`/community/${community._id}`}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                      variant="purple"
+                      size="sm"
                     >
                       View
-                    </Link>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       onClick={() => handleJoinCommunity(community._id)}
                       disabled={joiningCommunity}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-green-300"
+                      variant="success"
+                      size="sm"
                     >
                       {joiningCommunity ? 'Joining...' : 'Join'}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
-            </li>
+            </ListGroup.Item>
           ))}
-        </ul>
+        </ListGroup>
       )}
-      
+
       {/* Pagination */}
       {totalCommunities > limit && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-          <div className="flex-1 flex justify-between">
-            <button
+        <Card.Footer className="d-flex justify-content-between">
+          <Pagination className="m-0">
+            <Pagination.Prev
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                page === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Previous
-            </button>
-            <button
+            />
+            <Pagination.Item active>{page}</Pagination.Item>
+            <Pagination.Next
               onClick={() => handlePageChange(page + 1)}
               disabled={page * limit >= totalCommunities}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                page * limit >= totalCommunities
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
+            />
+          </Pagination>
+        </Card.Footer>
       )}
-    </div>
+    </Card>
   );
 };
 

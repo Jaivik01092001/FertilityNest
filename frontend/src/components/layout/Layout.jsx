@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import { Navbar, Container, Nav, Button } from 'react-bootstrap';
 
 // Icons for navigation
 const NavIcons = {
@@ -59,141 +60,114 @@ const Layout = ({ children }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="d-flex flex-column min-vh-100 bg-light">
       {/* Header */}
-      <header className="bg-white shadow-soft sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <Link to="/" className="text-xl font-bold text-primary-600 font-display">
-                  FertilityNest
-                </Link>
-              </div>
-              <nav className="hidden sm:ml-8 sm:flex sm:space-x-8">
-                {navItems.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`${
-                      location.pathname === item.path
-                        ? 'border-primary-500 text-primary-700'
-                        : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700'
-                    } inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
-            </div>
-            <div className="hidden sm:ml-6 sm:flex sm:items-center">
-              <div className="ml-3 relative">
-                <div className="flex items-center">
-                  <Link
-                    to="/profile"
-                    className={`${
-                      location.pathname === '/profile'
-                        ? 'bg-primary-50'
-                        : 'hover:bg-neutral-50'
-                    } p-2 rounded-full text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200`}
-                  >
-                    <span className="sr-only">View profile</span>
-                    <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold shadow-sm">
-                      {user?.name?.charAt(0) || 'U'}
-                    </div>
-                  </Link>
-                  <Link
-                    to="/settings"
-                    className={`${
-                      location.pathname === '/settings'
-                        ? 'bg-primary-50'
-                        : 'hover:bg-neutral-50'
-                    } ml-3 p-2 rounded-full text-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200`}
-                  >
-                    <span className="sr-only">Settings</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                  </Link>
-
-                  <button
-                    onClick={handleLogout}
-                    className="ml-3 p-2 rounded-full text-neutral-600 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors duration-200"
-                  >
-                    <span className="sr-only">Logout</span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                      />
-                    </svg>
-                  </button>
+      <Navbar bg="white" expand="sm" className="shadow-sm sticky-top">
+        <Container>
+          <Navbar.Brand as={Link} to="/" className="fw-bold text-purple">
+            FertilityNest
+          </Navbar.Brand>
+          <Navbar.Toggle aria-controls="main-navbar" />
+          <Navbar.Collapse id="main-navbar">
+            <Nav className="me-auto">
+              {navItems.map((item) => (
+                <Nav.Link
+                  key={item.path}
+                  as={Link}
+                  to={item.path}
+                  active={location.pathname === item.path}
+                >
+                  {item.label}
+                </Nav.Link>
+              ))}
+            </Nav>
+            <Nav>
+              <Nav.Link as={Link} to="/profile" active={location.pathname === '/profile'}>
+                <div className="d-flex align-items-center justify-content-center rounded-circle bg-light text-purple"
+                  style={{ width: '32px', height: '32px' }}>
+                  {user?.name?.charAt(0) || 'U'}
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+              </Nav.Link>
+              <Nav.Link as={Link} to="/settings" active={location.pathname === '/settings'}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+              </Nav.Link>
+              <Button
+                variant="link"
+                onClick={handleLogout}
+                className="nav-link"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="20"
+                  height="20"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              </Button>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
 
-      {/* Mobile menu */}
-      <div className="sm:hidden bg-white border-t border-neutral-200 fixed bottom-0 w-full z-30 shadow-soft">
-        <div className="grid grid-cols-6 h-16">
+      {/* Mobile menu - Bottom Navigation */}
+      <div className="d-block d-sm-none fixed-bottom bg-white border-top shadow-sm">
+        <div className="d-flex justify-content-between">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`${
-                location.pathname === item.path
-                  ? 'text-primary-600'
-                  : 'text-neutral-500 hover:text-neutral-700'
-              } flex flex-col items-center justify-center text-xs font-medium transition-colors duration-200 py-1`}
+              className={`text-decoration-none d-flex flex-column align-items-center justify-content-center p-2 ${location.pathname === item.path ? 'text-purple' : 'text-secondary'
+                }`}
             >
               <div className="mb-1">{item.icon}</div>
-              <span>{item.label}</span>
+              <small>{item.label}</small>
             </Link>
           ))}
         </div>
       </div>
 
       {/* Main content */}
-      <main className="flex-grow py-6 px-4 sm:px-6 lg:px-8 pb-20 sm:pb-6">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-grow-1 py-4 pb-5 pb-sm-4">
+        <Container>
           {children}
-        </div>
+        </Container>
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-neutral-200 py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-neutral-500">
+      <footer className="bg-white border-top py-3 mt-auto">
+        <Container>
+          <p className="text-center text-muted small mb-0">
             &copy; {new Date().getFullYear()} FertilityNest. All rights reserved.
           </p>
-        </div>
+        </Container>
       </footer>
     </div>
   );

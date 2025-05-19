@@ -94,7 +94,7 @@ const App = () => {
         pauseOnFocusLoss
         draggable
         pauseOnHover
-        toastClassName="rounded-lg shadow-card"
+        toastClassName="rounded-lg shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
         theme="light"
       />
       <Routes>

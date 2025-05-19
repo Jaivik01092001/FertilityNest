@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { getChatSessions, createChatSession } from '../../store/slices/chatSlice';
 import useApi from '../../hooks/useApi';
+import { Card, Button, Form, Spinner, Badge, ListGroup, Pagination, Alert } from 'react-bootstrap';
+import { PlusLg, Calendar, ChatLeftText } from 'react-bootstrap-icons';
 
 const ChatList = () => {
   const navigate = useNavigate();
@@ -11,13 +13,13 @@ const ChatList = () => {
   const [limit] = useState(10);
   const [isCreating, setIsCreating] = useState(false);
   const [sessionTitle, setSessionTitle] = useState('');
-  
+
   const { chatSessions, totalSessions } = useSelector((state) => state.chat);
   const { execute: fetchSessions, loading: loadingSessions, error: sessionsError } = useApi({
     asyncAction: getChatSessions,
     feature: 'chat',
   });
-  
+
   const { execute: startSession, loading: creatingSession, error: createError } = useApi({
     asyncAction: createChatSession,
     feature: 'chat',
@@ -34,17 +36,17 @@ const ChatList = () => {
   const handlePageChange = (newPage) => {
     setPage(newPage);
   };
-  
+
   const handleCreateSession = async (e) => {
     e.preventDefault();
-    
+
     const result = await startSession({ title: sessionTitle || undefined });
-    
+
     if (result.success) {
       toast.success('Chat session created successfully');
       setIsCreating(false);
       setSessionTitle('');
-      
+
       // Navigate to the new chat session
       if (result.data && result.data.chatSession) {
         navigate(`/chat/${result.data.chatSession._id}`);
@@ -56,219 +58,154 @@ const ChatList = () => {
 
   if (loadingSessions && chatSessions.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '250px' }}>
+        <Spinner animation="border" variant="purple" />
       </div>
     );
   }
 
   if (sessionsError && chatSessions.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-500">{sessionsError}</p>
-        <button
+      <div className="text-center py-5">
+        <Alert variant="danger">{sessionsError}</Alert>
+        <Button
+          variant="purple"
           onClick={loadSessions}
-          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+          className="mt-3"
         >
           Try Again
-        </button>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6 border-b border-gray-200 flex justify-between items-center">
+    <Card className="shadow">
+      <Card.Header className="d-flex justify-content-between align-items-center">
         <div>
-          <h3 className="text-lg leading-6 font-medium text-gray-900">
-            Chat with Anaira
-          </h3>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
+          <h3 className="fs-4 mb-1">Chat with Anaira</h3>
+          <p className="text-muted small mb-0">
             Your AI companion for fertility support
           </p>
         </div>
-        <button
+        <Button
+          variant="purple"
           onClick={() => setIsCreating(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+          className="d-flex align-items-center"
         >
-          New Chat
-        </button>
-      </div>
-      
+          <PlusLg className="me-1" /> New Chat
+        </Button>
+      </Card.Header>
+
       {isCreating && (
-        <div className="px-4 py-5 sm:p-6 border-b border-gray-200">
-          <h4 className="text-md font-medium text-gray-900 mb-4">Start a New Chat</h4>
-          <form onSubmit={handleCreateSession}>
-            <div>
-              <label htmlFor="sessionTitle" className="block text-sm font-medium text-gray-700">
-                Chat Title (Optional)
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="sessionTitle"
-                  id="sessionTitle"
-                  value={sessionTitle}
-                  onChange={(e) => setSessionTitle(e.target.value)}
-                  className="shadow-sm focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  placeholder="E.g., Questions about IVF"
-                />
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end space-x-3">
-              <button
-                type="button"
+        <Card.Body className="border-bottom">
+          <h5 className="mb-3">Start a New Chat</h5>
+          <Form onSubmit={handleCreateSession}>
+            <Form.Group className="mb-3">
+              <Form.Label>Chat Title (Optional)</Form.Label>
+              <Form.Control
+                type="text"
+                name="sessionTitle"
+                id="sessionTitle"
+                value={sessionTitle}
+                onChange={(e) => setSessionTitle(e.target.value)}
+                placeholder="E.g., Questions about IVF"
+              />
+            </Form.Group>
+            <div className="d-flex justify-content-end gap-2">
+              <Button
+                variant="outline-secondary"
                 onClick={() => setIsCreating(false)}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="purple"
                 type="submit"
                 disabled={creatingSession}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 disabled:bg-purple-300"
               >
                 {creatingSession ? 'Creating...' : 'Start Chat'}
-              </button>
+              </Button>
             </div>
-          </form>
-        </div>
+          </Form>
+        </Card.Body>
       )}
-      
+
       {createError && (
-        <div className="px-4 py-3 bg-red-50 text-red-700 text-sm">
+        <Alert variant="danger" className="m-3">
           {createError}
-        </div>
+        </Alert>
       )}
-      
+
       {chatSessions.length === 0 ? (
-        <div className="text-center py-12">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No chat sessions</h3>
-          <p className="mt-1 text-sm text-gray-500">
+        <Card.Body className="text-center py-5">
+          <ChatLeftText className="text-muted mb-3" size={48} />
+          <h5>No chat sessions</h5>
+          <p className="text-muted">
             Get started by creating a new chat with Anaira.
           </p>
-          <div className="mt-6">
-            <button
-              type="button"
-              onClick={() => setIsCreating(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-            >
-              <svg
-                className="-ml-1 mr-2 h-5 w-5"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              New Chat
-            </button>
-          </div>
-        </div>
+          <Button
+            variant="purple"
+            onClick={() => setIsCreating(true)}
+            className="mt-3 d-inline-flex align-items-center"
+          >
+            <PlusLg className="me-2" />
+            New Chat
+          </Button>
+        </Card.Body>
       ) : (
-        <ul className="divide-y divide-gray-200">
+        <ListGroup variant="flush">
           {chatSessions.map((session) => (
-            <li key={session._id}>
-              <Link
-                to={`/chat/${session._id}`}
-                className="block hover:bg-gray-50"
-              >
-                <div className="px-4 py-4 sm:px-6">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-purple-600 truncate">
-                      {session.title}
-                    </p>
-                    <div className="ml-2 flex-shrink-0 flex">
-                      <p className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        {session.messages?.length || 0} messages
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 sm:flex sm:justify-between">
-                    <div className="sm:flex">
-                      <p className="flex items-center text-sm text-gray-500">
-                        {session.context?.fertilityStage && (
-                          <span className="truncate">{session.context.fertilityStage}</span>
-                        )}
-                      </p>
-                    </div>
-                    <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                      <svg
-                        className="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                        aria-hidden="true"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <p>
-                        <time dateTime={new Date(session.createdAt).toISOString()}>
-                          {new Date(session.createdAt).toLocaleDateString()}
-                        </time>
-                      </p>
+            <ListGroup.Item
+              key={session._id}
+              action
+              as={Link}
+              to={`/chat/${session._id}`}
+              className="border-start-0 border-end-0"
+            >
+              <div className="d-flex justify-content-between align-items-start">
+                <div>
+                  <h6 className="mb-1 text-purple fw-medium text-truncate">
+                    {session.title}
+                  </h6>
+                  <div className="d-flex align-items-center text-muted small">
+                    {session.context?.fertilityStage && (
+                      <span className="me-3">{session.context.fertilityStage}</span>
+                    )}
+                    <div className="d-flex align-items-center">
+                      <Calendar size={14} className="me-1" />
+                      <time dateTime={new Date(session.createdAt).toISOString()}>
+                        {new Date(session.createdAt).toLocaleDateString()}
+                      </time>
                     </div>
                   </div>
                 </div>
-              </Link>
-            </li>
+                <Badge bg="success" pill>
+                  {session.messages?.length || 0} messages
+                </Badge>
+              </div>
+            </ListGroup.Item>
           ))}
-        </ul>
+        </ListGroup>
       )}
-      
+
       {/* Pagination */}
       {totalSessions > limit && (
-        <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-          <div className="flex-1 flex justify-between">
-            <button
+        <Card.Footer className="d-flex justify-content-between">
+          <Pagination className="m-0">
+            <Pagination.Prev
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-              className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                page === 1
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Previous
-            </button>
-            <button
+            />
+            <Pagination.Item active>{page}</Pagination.Item>
+            <Pagination.Next
               onClick={() => handlePageChange(page + 1)}
               disabled={page * limit >= totalSessions}
-              className={`ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md ${
-                page * limit >= totalSessions
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
+            />
+          </Pagination>
+        </Card.Footer>
       )}
-    </div>
+    </Card>
   );
 };
 

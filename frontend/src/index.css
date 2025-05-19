@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Coiny&display=swap");
-@import "tailwindcss";
+@import 'bootstrap/dist/css/bootstrap.min.css';
 
 /* Base Reset */
 * {
@@ -16,8 +16,8 @@ html {
 body {
   font-family: 'Poppins', sans-serif;
   font-size: 16px;
-  color: #1f2937; /* neutral-800 */
-  background-color: #f9fafb; /* neutral-50 */
+  color: #1f2937;
+  background-color: #f9fafb;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -111,37 +111,54 @@ textarea {
   padding: 3rem 0;
 }
 
-/* Card Styling */
-.card {
-  @apply bg-white rounded-xl shadow-soft p-6 transition-all duration-200;
+/* Custom Styling for Bootstrap Components */
+
+/* Custom Card Styling */
+.custom-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  padding: 1.5rem;
+  transition: all 0.2s;
 }
 
-.card:hover {
-  @apply shadow-card;
+.custom-card:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
-/* Button Styling */
-.btn {
-  @apply inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+/* Custom Button Colors */
+.btn-purple {
+  background-color: #7c3aed;
+  border-color: #7c3aed;
+  color: white;
 }
 
-.btn-primary {
-  @apply bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+.btn-purple:hover, .btn-purple:focus {
+  background-color: #6d28d9;
+  border-color: #6d28d9;
+  color: white;
 }
 
-.btn-secondary {
-  @apply bg-secondary-500 text-white hover:bg-secondary-600 focus:ring-secondary-400;
+.btn-pink {
+  background-color: #ec4899;
+  border-color: #ec4899;
+  color: white;
 }
 
-.btn-accent {
-  @apply bg-accent-500 text-white hover:bg-accent-600 focus:ring-accent-400;
+.btn-pink:hover, .btn-pink:focus {
+  background-color: #db2777;
+  border-color: #db2777;
+  color: white;
 }
 
-.btn-outline {
-  @apply border-2 border-primary-600 text-primary-600 bg-transparent hover:bg-primary-50 focus:ring-primary-500;
+.btn-green {
+  background-color: #22c55e;
+  border-color: #22c55e;
+  color: white;
 }
 
-/* Input Styling */
-.input {
-  @apply block w-full rounded-lg border-neutral-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
+.btn-green:hover, .btn-green:focus {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  color: white;
 }
