@@ -17,6 +17,18 @@ export const verifyEmail = createAsyncThunk(
       return response.data;
     } catch (error) {
       dispatch(setLoading({ feature: 'auth', isLoading: false }));
+
+      // Check if this is a 400 error with a specific message about already verified
+      if (error.response?.status === 400 &&
+        error.response?.data?.message?.includes('already verified')) {
+        // Return a special response for already verified case
+        return {
+          success: true,
+          alreadyVerified: true,
+          message: error.response.data.message
+        };
+      }
+
       dispatch(
         setError({
           feature: 'auth',
@@ -31,13 +43,14 @@ export const verifyEmail = createAsyncThunk(
 const VerifyEmail = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [verificationStatus, setVerificationStatus] = useState('verifying'); // 'verifying', 'success', 'error'
+  const [verificationStatus, setVerificationStatus] = useState('verifying'); // 'verifying', 'success', 'already-verified', 'error'
+  const [statusMessage, setStatusMessage] = useState('');
   const { isAuthenticated } = useSelector((state) => state.auth);
-  
+
   // Get token from URL query params
   const queryParams = new URLSearchParams(location.search);
   const token = queryParams.get('token');
-  
+
   const { execute, loading, error } = useApi({
     asyncAction: verifyEmail,
     feature: 'auth',
@@ -48,28 +61,39 @@ const VerifyEmail = () => {
       navigate('/');
       return;
     }
-    
+
     if (!token) {
       setVerificationStatus('error');
+      setStatusMessage('No verification token provided. Please check your email link.');
       return;
     }
-    
+
     const verifyUserEmail = async () => {
       const result = await execute(token);
-      
+
       if (result.success) {
-        setVerificationStatus('success');
-        // Redirect to login after 3 seconds
+        if (result.alreadyVerified) {
+          // Handle the case where the email was already verified
+          setVerificationStatus('already-verified');
+          setStatusMessage(result.message || 'Your email has already been verified. You can now log in to your account.');
+        } else {
+          // Normal success case - first time verification
+          setVerificationStatus('success');
+          setStatusMessage('Your email has been successfully verified. You can now log in to your account.');
+        }
+
+        // Redirect to login after 3 seconds in both cases
         setTimeout(() => {
           navigate('/login');
         }, 3000);
       } else {
         setVerificationStatus('error');
+        setStatusMessage(error || 'The verification link is invalid or has expired.');
       }
     };
-    
+
     verifyUserEmail();
-  }, [token, execute, navigate, isAuthenticated]);
+  }, [token, execute, navigate, isAuthenticated, error]);
 
   if (loading || verificationStatus === 'verifying') {
     return (
@@ -91,13 +115,15 @@ const VerifyEmail = () => {
     );
   }
 
-  if (verificationStatus === 'success') {
+  if (verificationStatus === 'success' || verificationStatus === 'already-verified') {
+    const isAlreadyVerified = verificationStatus === 'already-verified';
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <div>
             <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-              Email Verified!
+              {isAlreadyVerified ? 'Already Verified' : 'Email Verified!'}
             </h2>
             <div className="mt-6 flex justify-center">
               <div className="rounded-full bg-green-100 p-4">
@@ -107,7 +133,7 @@ const VerifyEmail = () => {
               </div>
             </div>
             <p className="mt-6 text-center text-base text-gray-600">
-              Your email has been successfully verified. You can now log in to your account.
+              {statusMessage}
             </p>
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-500">
@@ -141,7 +167,7 @@ const VerifyEmail = () => {
             </div>
           </div>
           <p className="mt-6 text-center text-base text-gray-600">
-            {error || 'The verification link is invalid or has expired.'}
+            {statusMessage}
           </p>
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">

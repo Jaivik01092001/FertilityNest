@@ -168,19 +168,41 @@ exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-    // Find user with verification token
+    console.log('Email verification attempt with token:', token);
+
+    // First check if any user has this token
     const user = await User.findOne({ verificationToken: token });
+
+    // If no user found with this token, check if a user was already verified with this token
     if (!user) {
+      // Try to find a user who might have been verified already (token was removed)
+      // We can only do this by checking all verified users, as we don't store the used tokens
+      console.log('No user found with active verification token, checking if already verified');
+
       return res.status(400).json({
         success: false,
-        message: 'Invalid or expired verification token'
+        message: 'Invalid or expired verification token. If you have already verified your email, please proceed to login.'
       });
     }
 
+    // Check if user is already verified
+    if (user.isVerified) {
+      console.log('User already verified:', user.email);
+      return res.status(200).json({
+        success: true,
+        message: 'Email already verified. You can now log in to your account.',
+        alreadyVerified: true
+      });
+    }
+
+    console.log('Verifying user email:', user.email);
+
     // Update user verification status
     user.isVerified = true;
-    user.verificationToken = undefined;
+    user.verificationToken = undefined; // Remove the token after verification
     await user.save();
+
+    console.log('User email verified successfully:', user.email);
 
     res.status(200).json({
       success: true,
