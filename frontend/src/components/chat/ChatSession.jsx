@@ -1,17 +1,49 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { getChatSession, sendMessage, setTypingStatus } from '../../store/slices/chatSlice';
 import useApi from '../../hooks/useApi';
-import { getSocket, initSocket } from '../../services/socketService';
+import { initSocket } from '../../services/socketService';
 import DistressButton from '../common/DistressButton';
 import { Card, Button, Form, Spinner, Alert } from 'react-bootstrap';
 import { SendFill, ArrowLeft } from 'react-bootstrap-icons';
 
+/**
+ * Get badge color based on emotion
+ * @param {string} emotion - Detected emotion
+ * @returns {string} Bootstrap badge color class
+ */
+const getEmotionBadgeColor = (emotion) => {
+  switch (emotion) {
+    case 'happy':
+      return 'bg-success';
+    case 'sad':
+      return 'bg-info';
+    case 'angry':
+      return 'bg-danger';
+    case 'anxious':
+      return 'bg-warning text-dark';
+    case 'distressed':
+      return 'bg-danger';
+    case 'hopeful':
+      return 'bg-primary';
+    default:
+      return 'bg-secondary';
+  }
+};
+
+/**
+ * Capitalize first letter of a string
+ * @param {string} string - String to capitalize
+ * @returns {string} Capitalized string
+ */
+const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+};
+
 const ChatSession = () => {
   const { sessionId } = useParams();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef(null);
@@ -167,6 +199,15 @@ const ChatSession = () => {
                       }`}
                     style={{ maxWidth: '75%' }}
                   >
+                    {/* Emotion indicator */}
+                    {msg.emotionDetected && msg.emotionDetected !== 'neutral' && (
+                      <div className="mb-1">
+                        <span className={`badge ${getEmotionBadgeColor(msg.emotionDetected)}`}>
+                          {capitalizeFirstLetter(msg.emotionDetected)}
+                        </span>
+                      </div>
+                    )}
+
                     <div>
                       {msg.content.split('\n').map((line, i) => (
                         <React.Fragment key={i}>

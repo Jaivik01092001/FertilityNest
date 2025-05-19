@@ -178,18 +178,26 @@ exports.sendMessage = async (req, res) => {
       });
     }
 
-    // Create user message
+    // Analyze user message for emotion and distress
+    const emotionAnalysis = detectEmotion(content);
+
+    // Create user message with emotion data
     const userMessage = {
       sender: 'user',
       content,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      emotionDetected: emotionAnalysis.emotion,
+      distressLevel: emotionAnalysis.distressLevel,
+      metadata: {
+        emotionAnalysis: emotionAnalysis
+      }
     };
 
     // Add message to chat session
     chatSession.messages.push(userMessage);
 
-    // Check for distress
-    const distressDetected = chatSession.checkDistress();
+    // Check for distress - either through our enhanced detection or the model's method
+    const distressDetected = emotionAnalysis.distressLevel >= 7 || chatSession.checkDistress();
 
     // If distress detected, notify emergency contacts
     if (distressDetected && !chatSession.distressActionTaken) {
@@ -337,18 +345,48 @@ exports.deleteChatSession = async (req, res) => {
  */
 const getAIResponse = async (userMessage, chatSession) => {
   try {
-    // Prepare context for AI
+    // Get user's detected emotion
+    const userEmotion = chatSession.messages.length > 0 && chatSession.messages[chatSession.messages.length - 1].emotionDetected
+      ? chatSession.messages[chatSession.messages.length - 1].emotionDetected
+      : 'neutral';
+
+    const userDistressLevel = chatSession.messages.length > 0 && chatSession.messages[chatSession.messages.length - 1].distressLevel
+      ? chatSession.messages[chatSession.messages.length - 1].distressLevel
+      : 0;
+
+    // Prepare enhanced context for AI with emotion awareness
     const contextMessage = `You are Anaira, an empathetic AI companion for FertilityNest, a fertility support app.
-    The user is on a ${chatSession.context.userJourneyType || 'fertility'} journey and is currently in the ${chatSession.context.fertilityStage || 'unknown'} stage.
-    ${chatSession.context.cycleDay ? `They are on day ${chatSession.context.cycleDay} of their cycle.` : ''}
-    ${chatSession.context.recentSymptoms?.length > 0 ? `They recently experienced these symptoms: ${chatSession.context.recentSymptoms.join(', ')}.` : ''}
-    ${chatSession.context.recentMedications?.length > 0 ? `They are taking these medications: ${chatSession.context.recentMedications.join(', ')}.` : ''}
 
-    Be compassionate, informative, and supportive. Provide evidence-based information when possible, but clarify you're not a medical professional.
-    If the user seems distressed, offer support and suggest they speak with a healthcare provider.`;
+    USER CONTEXT:
+    - Journey Type: ${chatSession.context.userJourneyType || 'fertility'}
+    - Current Stage: ${chatSession.context.fertilityStage || 'unknown'}
+    ${chatSession.context.cycleDay ? `- Cycle Day: ${chatSession.context.cycleDay}` : ''}
+    ${chatSession.context.recentSymptoms?.length > 0 ? `- Recent Symptoms: ${chatSession.context.recentSymptoms.join(', ')}` : ''}
+    ${chatSession.context.recentMedications?.length > 0 ? `- Current Medications: ${chatSession.context.recentMedications.join(', ')}` : ''}
 
-    // Get previous messages (limit to last 5 for context)
-    const previousMessages = chatSession.messages.slice(-5);
+    EMOTIONAL CONTEXT:
+    - Current Emotion: ${userEmotion}
+    - Distress Level: ${userDistressLevel}/10
+
+    YOUR ROLE:
+    - Provide emotional support, accurate information, and helpful guidance related to fertility, reproductive health, and emotional wellbeing.
+    - Be empathetic, warm, and supportive in your responses.
+    - Acknowledge and respond appropriately to the user's emotional state.
+    - If the user expresses distress (distress level 7+), acknowledge their feelings, offer support, and suggest resources.
+    - Do not provide medical diagnoses or treatment recommendations. Instead, encourage the user to consult with their healthcare provider for medical advice.
+    - Keep your responses concise (3-5 sentences) unless the user asks for detailed information.
+
+    RESPONSE GUIDELINES BASED ON EMOTION:
+    - If user is happy: Match their positive energy while remaining informative and supportive.
+    - If user is sad: Be gentle, validating, and compassionate. Acknowledge their feelings before providing information.
+    - If user is angry: Be calm, non-judgmental, and validating. Acknowledge frustration before offering perspective.
+    - If user is anxious: Be reassuring but honest. Provide clear, factual information to help reduce uncertainty.
+    - If user is distressed: Prioritize emotional support, validate feelings, and offer specific resources or coping strategies.
+    - If user is hopeful: Encourage realistic optimism while providing balanced information.
+    - If user is neutral: Focus on being informative and supportive.`;
+
+    // Get previous messages (limit to last 8 for context)
+    const previousMessages = chatSession.messages.slice(-8);
 
     // Use the system API key
     // In a production environment, you might want to check if the user has their own API key
@@ -361,13 +399,20 @@ const getAIResponse = async (userMessage, chatSession) => {
     // Combine context and user message
     let combinedMessage = contextMessage + "\n\n";
 
-    // Add chat history
+    // Add enhanced chat history with emotion context
     if (previousMessages.length > 0) {
-      combinedMessage += "Previous conversation:\n";
+      combinedMessage += "CONVERSATION HISTORY:\n";
       for (const msg of previousMessages) {
         const role = msg.sender === 'user' ? 'User' : 'Anaira';
-        combinedMessage += `${role}: ${msg.content}\n`;
+        const emotionTag = msg.emotionDetected ? ` [Emotion: ${msg.emotionDetected}]` : '';
+        combinedMessage += `${role}: ${msg.content}${emotionTag}\n`;
       }
+    }
+
+    // Add conversation analysis
+    const conversationAnalysis = analyzeConversation(chatSession.messages);
+    if (conversationAnalysis) {
+      combinedMessage += "\nCONVERSATION ANALYSIS:\n" + conversationAnalysis;
     }
 
     // Add current user message
@@ -397,14 +442,19 @@ const getAIResponse = async (userMessage, chatSession) => {
     // Extract AI response
     const aiContent = response.data.candidates[0].content.parts[0].text.trim();
 
-    // Simple emotion detection (can be replaced with more sophisticated ML model)
-    const emotionDetected = detectEmotion(userMessage);
+    // Enhanced emotion detection
+    const emotionAnalysis = detectEmotion(userMessage);
 
+    // Create AI response object with emotion data
     return {
       sender: 'ai',
       content: aiContent,
       timestamp: Date.now(),
-      emotionDetected
+      emotionDetected: emotionAnalysis.emotion,
+      distressLevel: emotionAnalysis.distressLevel,
+      metadata: {
+        emotionAnalysis: emotionAnalysis
+      }
     };
   } catch (error) {
     console.error('Gemini API error:', error.message);
@@ -421,29 +471,240 @@ const getAIResponse = async (userMessage, chatSession) => {
 };
 
 /**
- * Simple emotion detection function
+ * Enhanced emotion detection function
  * @param {String} text - Text to analyze
- * @returns {String} Detected emotion
+ * @returns {Object} Detected emotion and distress level
  */
 const detectEmotion = (text) => {
   const text_lower = text.toLowerCase();
 
-  // Simple keyword-based emotion detection
+  // Enhanced keyword-based emotion detection with more comprehensive keywords
   const emotionKeywords = {
-    happy: ['happy', 'joy', 'excited', 'great', 'wonderful', 'amazing', 'good'],
-    sad: ['sad', 'unhappy', 'depressed', 'down', 'blue', 'upset', 'cry'],
-    angry: ['angry', 'mad', 'furious', 'annoyed', 'frustrated', 'irritated'],
-    anxious: ['anxious', 'worried', 'nervous', 'stress', 'afraid', 'fear'],
-    distressed: ['help', 'emergency', 'pain', 'hurt', 'terrible', 'unbearable', 'suicidal', 'hopeless'],
-    hopeful: ['hope', 'optimistic', 'looking forward', 'positive', 'better']
+    happy: [
+      'happy', 'joy', 'excited', 'great', 'wonderful', 'amazing', 'good',
+      'delighted', 'pleased', 'glad', 'thrilled', 'ecstatic', 'content',
+      'cheerful', 'joyful', 'elated', 'overjoyed', 'blissful', 'grateful',
+      'blessed', 'fortunate', 'lucky', 'satisfied', 'successful'
+    ],
+    sad: [
+      'sad', 'unhappy', 'depressed', 'down', 'blue', 'upset', 'cry',
+      'miserable', 'heartbroken', 'gloomy', 'somber', 'melancholy',
+      'tearful', 'sorrowful', 'grief', 'mourning', 'dejected',
+      'disappointed', 'regretful', 'lonely', 'isolated', 'abandoned'
+    ],
+    angry: [
+      'angry', 'mad', 'furious', 'annoyed', 'frustrated', 'irritated',
+      'outraged', 'enraged', 'infuriated', 'livid', 'seething', 'hostile',
+      'resentful', 'bitter', 'indignant', 'irate', 'fuming',
+      'aggravated', 'exasperated', 'disgusted', 'offended'
+    ],
+    anxious: [
+      'anxious', 'worried', 'nervous', 'stress', 'afraid', 'fear',
+      'panicked', 'terrified', 'scared', 'uneasy', 'apprehensive',
+      'concerned', 'troubled', 'restless', 'tense', 'overwhelmed',
+      'insecure', 'uncertain', 'doubtful', 'hesitant', 'paranoid'
+    ],
+    distressed: [
+      'help', 'emergency', 'pain', 'hurt', 'terrible', 'unbearable', 'suicidal', 'hopeless',
+      'desperate', 'suffering', 'agony', 'anguish', 'torment', 'torture',
+      'misery', 'trauma', 'crisis', 'breakdown', 'collapse', 'end it all',
+      'can\'t take it', 'can\'t go on', 'give up', 'no way out', 'no hope',
+      'kill myself', 'end my life', 'self-harm', 'harm myself', 'die'
+    ],
+    hopeful: [
+      'hope', 'optimistic', 'looking forward', 'positive', 'better',
+      'encouraged', 'inspired', 'motivated', 'determined', 'confident',
+      'assured', 'promising', 'bright', 'uplifting', 'reassuring',
+      'anticipating', 'eager', 'enthusiastic', 'excited about future'
+    ]
   };
 
-  // Check for each emotion
+  // Calculate emotion scores
+  const emotionScores = {};
   for (const [emotion, keywords] of Object.entries(emotionKeywords)) {
-    if (keywords.some(keyword => text_lower.includes(keyword))) {
-      return emotion;
+    let score = 0;
+    for (const keyword of keywords) {
+      // Use regex to match whole words only
+      const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+      const matches = text_lower.match(regex);
+      if (matches) {
+        score += matches.length;
+      }
+    }
+    emotionScores[emotion] = score;
+  }
+
+  // Calculate distress level (0-10 scale)
+  let distressLevel = 0;
+  if (emotionScores.distressed > 0) {
+    // Base distress level on number of distress keywords found
+    distressLevel = Math.min(10, emotionScores.distressed * 2);
+  } else if (emotionScores.anxious > 0) {
+    distressLevel = Math.min(6, emotionScores.anxious);
+  } else if (emotionScores.sad > 0) {
+    distressLevel = Math.min(4, emotionScores.sad);
+  } else if (emotionScores.angry > 0) {
+    distressLevel = Math.min(5, emotionScores.angry);
+  }
+
+  // Check for specific high-distress phrases
+  const highDistressPhrases = [
+    'kill myself', 'end my life', 'suicide', 'want to die',
+    'no reason to live', 'can\'t go on', 'better off dead'
+  ];
+
+  if (highDistressPhrases.some(phrase => text_lower.includes(phrase))) {
+    distressLevel = 10;
+  }
+
+  // Get the dominant emotion (highest score)
+  let dominantEmotion = 'neutral';
+  let maxScore = 0;
+
+  for (const [emotion, score] of Object.entries(emotionScores)) {
+    if (score > maxScore) {
+      maxScore = score;
+      dominantEmotion = emotion;
     }
   }
 
-  return 'neutral';
+  // If distress level is very high, override with distressed
+  if (distressLevel >= 7 && dominantEmotion !== 'distressed') {
+    dominantEmotion = 'distressed';
+  }
+
+  return {
+    emotion: maxScore > 0 ? dominantEmotion : 'neutral',
+    distressLevel: distressLevel
+  };
+};
+
+/**
+ * Analyze conversation for patterns and topics
+ * @param {Array} messages - Array of message objects
+ * @returns {String} Analysis of conversation
+ */
+const analyzeConversation = (messages) => {
+  if (!messages || messages.length < 3) {
+    return ''; // Not enough messages to analyze
+  }
+
+  let analysis = '';
+
+  // Extract user messages
+  const userMessages = messages.filter(msg => msg.sender === 'user');
+  if (userMessages.length < 2) {
+    return ''; // Not enough user messages to analyze
+  }
+
+  // Track emotional trend
+  const emotions = userMessages
+    .filter(msg => msg.emotionDetected)
+    .map(msg => msg.emotionDetected);
+
+  if (emotions.length >= 3) {
+    // Check if emotions are trending negative
+    const negativeEmotions = ['sad', 'angry', 'anxious', 'distressed'];
+    const recentEmotions = emotions.slice(-3);
+    const negativeCount = recentEmotions.filter(e => negativeEmotions.includes(e)).length;
+
+    if (negativeCount >= 2) {
+      analysis += '- User emotions are trending negative\n';
+    } else if (recentEmotions.every(e => e === 'happy' || e === 'hopeful')) {
+      analysis += '- User emotions are trending positive\n';
+    } else if (recentEmotions.every(e => e === 'neutral')) {
+      analysis += '- User is maintaining neutral emotional tone\n';
+    }
+  }
+
+  // Check for repeated questions or concerns
+  const userTexts = userMessages.map(msg => msg.content.toLowerCase());
+  const repeatedConcerns = findRepeatedConcerns(userTexts);
+
+  if (repeatedConcerns.length > 0) {
+    analysis += `- User has repeatedly mentioned: ${repeatedConcerns.join(', ')}\n`;
+  }
+
+  // Identify main topics
+  const fertilityKeywords = {
+    'cycle': ['cycle', 'period', 'menstruation', 'flow', 'bleeding', 'spotting'],
+    'ovulation': ['ovulate', 'ovulation', 'fertile window', 'egg', 'follicle', 'LH surge'],
+    'pregnancy': ['pregnant', 'pregnancy', 'conception', 'baby', 'embryo', 'fetus'],
+    'ivf': ['ivf', 'in vitro', 'retrieval', 'transfer', 'embryo transfer', 'stimulation'],
+    'symptoms': ['symptom', 'pain', 'cramp', 'nausea', 'tender', 'sore', 'tired', 'fatigue'],
+    'medications': ['medication', 'medicine', 'pill', 'drug', 'dose', 'prescription'],
+    'emotions': ['feel', 'feeling', 'emotion', 'stress', 'anxiety', 'worry', 'hope', 'fear']
+  };
+
+  const topicCounts = {};
+
+  userTexts.forEach(text => {
+    Object.entries(fertilityKeywords).forEach(([topic, keywords]) => {
+      if (keywords.some(keyword => text.includes(keyword))) {
+        topicCounts[topic] = (topicCounts[topic] || 0) + 1;
+      }
+    });
+  });
+
+  const mainTopics = Object.entries(topicCounts)
+    .filter(([_, count]) => count >= 2)
+    .map(([topic, _]) => topic);
+
+  if (mainTopics.length > 0) {
+    analysis += `- Main topics of interest: ${mainTopics.join(', ')}\n`;
+  }
+
+  // Analyze conversation style
+  const avgMessageLength = userTexts.reduce((sum, text) => sum + text.length, 0) / userTexts.length;
+
+  if (avgMessageLength < 50) {
+    analysis += '- User tends to be brief and direct\n';
+  } else if (avgMessageLength > 150) {
+    analysis += '- User provides detailed and lengthy messages\n';
+  }
+
+  // Check for question frequency
+  const questionCount = userTexts.filter(text => text.includes('?')).length;
+  const questionRatio = questionCount / userTexts.length;
+
+  if (questionRatio > 0.7) {
+    analysis += '- User primarily asks questions rather than sharing information\n';
+  }
+
+  return analysis;
+};
+
+/**
+ * Find repeated concerns in user messages
+ * @param {Array} messages - Array of message strings
+ * @returns {Array} Array of repeated concerns
+ */
+const findRepeatedConcerns = (messages) => {
+  // Common fertility concerns
+  const concernPatterns = [
+    { regex: /\b(worry|worried|anxious|anxiety|stress|stressed)\b/gi, concern: 'anxiety/stress' },
+    { regex: /\b(pain|hurt|ache|cramp)\b/gi, concern: 'pain/discomfort' },
+    { regex: /\b(pregnant|pregnancy|conceive|conception)\b/gi, concern: 'getting pregnant' },
+    { regex: /\b(period|cycle|irregular|late|early)\b/gi, concern: 'cycle regularity' },
+    { regex: /\b(symptom|sign)\b/gi, concern: 'symptoms' },
+    { regex: /\b(medication|medicine|drug|pill|dose)\b/gi, concern: 'medications' },
+    { regex: /\b(ivf|in vitro|transfer|retrieval)\b/gi, concern: 'IVF treatment' },
+    { regex: /\b(partner|husband|wife|spouse)\b/gi, concern: 'partner issues' }
+  ];
+
+  // Count occurrences of each concern
+  const concernCounts = {};
+
+  messages.forEach(message => {
+    concernPatterns.forEach(({ regex, concern }) => {
+      if (message.match(regex)) {
+        concernCounts[concern] = (concernCounts[concern] || 0) + 1;
+      }
+    });
+  });
+
+  // Return concerns mentioned multiple times
+  return Object.entries(concernCounts)
+    .filter(([_, count]) => count >= 2)
+    .map(([concern, _]) => concern);
 };

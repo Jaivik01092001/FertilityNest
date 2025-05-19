@@ -19,6 +19,7 @@ const medicationRoutes = require('./routes/medication.routes');
 const chatRoutes = require('./routes/chat.routes');
 const partnerRoutes = require('./routes/partner.routes');
 const communityRoutes = require('./routes/community.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 // Initialize Express app
 const app = express();
@@ -46,7 +47,30 @@ app.use(morgan('dev'));
 
 // Database connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/fertilitynest')
-  .then(() => console.log('Connected to MongoDB'))
+  .then(async () => {
+    console.log('Connected to MongoDB');
+
+    // Run database seeders in development mode
+    if (process.env.NODE_ENV !== 'production' || process.env.ENABLE_PRODUCTION_SEEDING === 'true') {
+      try {
+        const { seedDatabase, shouldSkipSeeding } = require('./seeders');
+
+        if (!shouldSkipSeeding()) {
+          console.log('🌱 Starting database seeding...');
+          const result = await seedDatabase();
+          console.log('🎉 Database seeding completed successfully!');
+          console.log('📊 Seeding summary:');
+          Object.entries(result).forEach(([key, value]) => {
+            console.log(`   - ${key}: ${value}`);
+          });
+        } else {
+          console.log('⏭️ Database seeding skipped (disabled by configuration)');
+        }
+      } catch (error) {
+        console.error('❌ Error seeding database:', error);
+      }
+    }
+  })
   .catch(err => console.error('MongoDB connection error:', err));
 
 // Socket.IO connection
@@ -87,6 +111,7 @@ app.use('/api/medications', medicationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Serve static assets in production
 if (process.env.NODE_ENV === 'production') {

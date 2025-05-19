@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import api from '../../services/api';
-import { Modal, ListGroup, Button } from 'react-bootstrap';
-import { ExclamationTriangleFill } from 'react-bootstrap-icons';
+import { Modal, ListGroup, Button, Form } from 'react-bootstrap';
+import { ExclamationTriangleFill, SendFill } from 'react-bootstrap-icons';
 
 // Support resources to display when no partner is connected
 const SUPPORT_RESOURCES = [
@@ -54,32 +54,49 @@ const DistressButton = ({
   const { user } = useSelector((state) => state.auth);
   const { partnerInfo } = useSelector((state) => state.partner);
 
-  // Handle distress button click
-  const handleDistressClick = async () => {
-    // If user has a partner, send distress signal
-    if (user?.partnerId) {
-      try {
-        setSending(true);
-        const response = await api.post('/partners/distress', {
-          message: 'I need support right now. Please reach out to me.',
-          location: 'App distress button'
-        });
+  // State for distress message
+  const [distressMessage, setDistressMessage] = useState('');
+  const [showDistressModal, setShowDistressModal] = useState(false);
 
-        if (response.data.success) {
-          toast.success('Your partner has been notified.');
-        } else {
-          toast.error('Failed to send notification. Please try again.');
-          console.error('Distress signal error:', response.data);
-        }
-      } catch (error) {
-        toast.error('Failed to send notification. Please try again.');
-        console.error('Distress signal error:', error);
-      } finally {
-        setSending(false);
-      }
+  // Handle distress button click
+  const handleDistressClick = () => {
+    // If user has a partner, show distress message modal
+    if (user?.partnerId) {
+      setShowDistressModal(true);
     } else {
       // If no partner, show support resources modal
       setShowModal(true);
+    }
+  };
+
+  // Handle sending distress signal
+  const handleSendDistressSignal = async () => {
+    if (!user?.partnerId) {
+      setShowModal(true);
+      return;
+    }
+
+    try {
+      setSending(true);
+      const response = await api.post('/partners/distress', {
+        message: distressMessage || 'I need support right now. Please reach out to me.',
+        location: 'App distress button',
+        urgency: 'high'
+      });
+
+      if (response.data.success) {
+        toast.success('Your partner has been notified.');
+        setShowDistressModal(false);
+        setDistressMessage('');
+      } else {
+        toast.error('Failed to send notification. Please try again.');
+        console.error('Distress signal error:', response.data);
+      }
+    } catch (error) {
+      toast.error('Failed to send notification. Please try again.');
+      console.error('Distress signal error:', error);
+    } finally {
+      setSending(false);
     }
   };
 
@@ -129,6 +146,64 @@ const DistressButton = ({
             onClick={() => setShowModal(false)}
           >
             Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Distress Message Modal */}
+      <Modal show={showDistressModal} onHide={() => setShowDistressModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+            <div className="d-flex align-items-center">
+              <div className="me-3 bg-danger bg-opacity-10 rounded-circle p-2">
+                <ExclamationTriangleFill className="text-danger" size={24} />
+              </div>
+              Send Distress Signal
+            </div>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            This will send an urgent notification to your partner{partnerInfo ? ` (${partnerInfo.name})` : ''}.
+          </p>
+
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>Message (optional)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={distressMessage}
+                onChange={(e) => setDistressMessage(e.target.value)}
+                placeholder="Add a personal message to your partner..."
+              />
+              <Form.Text className="text-muted">
+                If left empty, a default message will be sent.
+              </Form.Text>
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowDistressModal(false)}
+            disabled={sending}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleSendDistressSignal}
+            disabled={sending}
+            className="d-flex align-items-center"
+          >
+            {sending ? (
+              <>Sending...</>
+            ) : (
+              <>
+                <SendFill className="me-2" /> Send Signal
+              </>
+            )}
           </Button>
         </Modal.Footer>
       </Modal>

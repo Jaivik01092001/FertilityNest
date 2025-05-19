@@ -25,7 +25,7 @@ const generateToken = (user) => {
 exports.register = async (req, res) => {
   try {
     const { name, email, password, fertilityStage, journeyType, dateOfBirth, phone } = req.body;
-    
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -34,10 +34,10 @@ exports.register = async (req, res) => {
         message: 'User with this email already exists'
       });
     }
-    
+
     // Generate verification token
     const verificationToken = crypto.randomBytes(20).toString('hex');
-    
+
     // Create new user
     const user = new User({
       name,
@@ -49,10 +49,10 @@ exports.register = async (req, res) => {
       phone,
       verificationToken
     });
-    
+
     // Save user to database
     await user.save();
-    
+
     // Send verification email
     const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
     await sendEmail({
@@ -65,14 +65,14 @@ exports.register = async (req, res) => {
         <p>If you did not create this account, please ignore this email.</p>
       `
     });
-    
+
     // Generate JWT token
     const token = generateToken(user);
-    
+
     // Remove sensitive data
     user.password = undefined;
     user.verificationToken = undefined;
-    
+
     res.status(201).json({
       success: true,
       message: 'User registered successfully. Please verify your email.',
@@ -97,33 +97,51 @@ exports.register = async (req, res) => {
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
+    console.log('Login attempt:', { email });
+
     // Check if user exists
     const user = await User.findOne({ email });
     if (!user) {
+      console.log('Login failed: User not found for email:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
-    
+
+    console.log('User found:', {
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      hasPassword: !!user.password,
+      passwordLength: user.password ? user.password.length : 0
+    });
+
     // Check if password is correct
+    console.log('Comparing password...');
     const isMatch = await user.comparePassword(password);
+    console.log('Password match result:', isMatch);
+
     if (!isMatch) {
+      console.log('Login failed: Incorrect password for user:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
-    
+
     // Generate JWT token
+    console.log('Generating token with JWT_SECRET:', process.env.JWT_SECRET ? 'is set' : 'is NOT set');
     const token = generateToken(user);
-    
+
     // Remove sensitive data
     user.password = undefined;
     user.verificationToken = undefined;
     user.resetPasswordToken = undefined;
-    
+
+    console.log('Login successful for user:', email);
+
     res.status(200).json({
       success: true,
       message: 'Login successful',
@@ -132,6 +150,7 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error.message);
+    console.error('Login error stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Error logging in',
@@ -148,7 +167,7 @@ exports.login = async (req, res) => {
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
-    
+
     // Find user with verification token
     const user = await User.findOne({ verificationToken: token });
     if (!user) {
@@ -157,12 +176,12 @@ exports.verifyEmail = async (req, res) => {
         message: 'Invalid or expired verification token'
       });
     }
-    
+
     // Update user verification status
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
-    
+
     res.status(200).json({
       success: true,
       message: 'Email verified successfully'
@@ -185,7 +204,7 @@ exports.verifyEmail = async (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
@@ -194,15 +213,15 @@ exports.forgotPassword = async (req, res) => {
         message: 'User not found'
       });
     }
-    
+
     // Generate reset token
     const resetToken = crypto.randomBytes(20).toString('hex');
-    
+
     // Set reset token and expiry
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
-    
+
     // Send reset email
     const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
     await sendEmail({
@@ -216,7 +235,7 @@ exports.forgotPassword = async (req, res) => {
         <p>This link is valid for 1 hour.</p>
       `
     });
-    
+
     res.status(200).json({
       success: true,
       message: 'Password reset email sent'
@@ -240,26 +259,26 @@ exports.resetPassword = async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
-    
+
     // Find user with reset token and valid expiry
     const user = await User.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() }
     });
-    
+
     if (!user) {
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired reset token'
       });
     }
-    
+
     // Update password
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
-    
+
     // Send confirmation email
     await sendEmail({
       to: user.email,
@@ -270,7 +289,7 @@ exports.resetPassword = async (req, res) => {
         <p>If you did not make this change, please contact support immediately.</p>
       `
     });
-    
+
     res.status(200).json({
       success: true,
       message: 'Password reset successful'
@@ -293,14 +312,14 @@ exports.resetPassword = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password -verificationToken -resetPasswordToken -resetPasswordExpires');
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     res.status(200).json({
       success: true,
       user

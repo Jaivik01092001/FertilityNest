@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: function() {
+    required: function () {
       return !this.googleId; // Password is required only if not using Google auth
     },
     minlength: 6
@@ -108,9 +108,21 @@ const userSchema = new mongoose.Schema({
   resetPasswordExpires: Date,
   role: {
     type: String,
-    enum: ['user', 'admin', 'moderator'],
+    enum: ['user', 'partner', 'admin', 'moderator'],
     default: 'user'
   },
+  communityPreferences: [{
+    category: {
+      type: String,
+      enum: ['IVF Warriors', 'PCOS Support', 'LGBTQ+', 'Single Moms by Choice', 'Pregnancy Loss', 'Fertility Journey', 'General', 'Other']
+    },
+    preferenceLevel: {
+      type: Number,
+      min: 1,
+      max: 5,
+      default: 3
+    }
+  }],
   geminiApiKey: {
     type: String,
     trim: true
@@ -132,7 +144,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to hash password
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   const user = this;
 
   // Only hash the password if it's modified or new
@@ -150,12 +162,12 @@ userSchema.pre('save', async function(next) {
 });
 
 // Method to compare password
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 // Method to generate partner code
-userSchema.methods.generatePartnerCode = function() {
+userSchema.methods.generatePartnerCode = function () {
   const code = Math.random().toString(36).substring(2, 8).toUpperCase();
   this.partnerCode = code;
   return code;

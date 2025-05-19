@@ -24,6 +24,9 @@ import Settings from './components/settings/Settings'
 // Import dashboard component
 import Dashboard from './components/dashboard/Dashboard'
 
+// Import admin components
+import AdminDashboard from './components/admin/AdminDashboard'
+
 // Import cycle components
 import CycleList from './components/cycles/CycleList'
 import CreateCycle from './components/cycles/CreateCycle'
@@ -201,6 +204,13 @@ const App = () => {
         <Route path="/community/:communityId" element={
           <ProtectedRoute>
             <CommunityDetail />
+          </ProtectedRoute>
+        } />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={
+          <ProtectedRoute>
+            <AdminDashboard />
           </ProtectedRoute>
         } />
 
